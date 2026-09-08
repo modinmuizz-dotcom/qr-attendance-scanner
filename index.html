@@ -3,271 +3,343 @@
 
 <head>
 
-<meta charset="UTF-8">
+  <meta charset="UTF-8">
 
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-<title>QR Attendance Scanner</title>
+  <title>QR Attendance Scanner</title>
 
-<script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
 
-<style>
+  <!-- HTML5 QR CODE LIBRARY -->
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
 
-* {
-  box-sizing: border-box;
-}
 
-body {
+  <style>
 
-  margin: 0;
+    * {
+      box-sizing: border-box;
+    }
 
-  padding: 20px;
 
-  background: #f3f4f6;
+    body {
 
-  font-family:
-    Arial,
-    sans-serif;
+      margin: 0;
 
-}
+      padding: 20px;
 
-.container {
+      background: #f3f4f6;
 
-  width: 100%;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 
-  max-width: 650px;
+    }
 
-  margin: auto;
 
-  background: white;
+    .container {
 
-  padding: 25px;
+      width: 100%;
 
-  border-radius: 18px;
+      max-width: 650px;
 
-  box-shadow:
-    0 5px 25px rgba(0,0,0,.10);
+      margin: 0 auto;
 
-}
+      background: #ffffff;
 
-h1 {
+      padding: 25px;
 
-  text-align: center;
+      border-radius: 18px;
 
-  margin-top: 0;
+      box-shadow:
+        0 5px 25px rgba(0, 0, 0, 0.10);
 
-  color: #111827;
+    }
 
-  font-size: 28px;
 
-}
+    h1 {
 
-#status {
+      margin: 0 0 20px 0;
 
-  display: none;
+      text-align: center;
 
-  padding: 14px;
+      color: #111827;
 
-  border-radius: 10px;
+      font-size: 28px;
 
-  text-align: center;
+    }
 
-  margin: 15px 0;
 
-  font-weight: bold;
+    /* STATUS */
 
-}
+    #status {
 
-.info {
+      display: none;
 
-  background: #e0f2fe;
+      padding: 15px;
 
-  color: #075985;
+      margin-bottom: 18px;
 
-}
+      border-radius: 10px;
 
-.success {
+      text-align: center;
 
-  background: #dcfce7;
+      font-size: 17px;
 
-  color: #166534;
+      font-weight: bold;
 
-}
+      line-height: 1.4;
 
-.error {
+    }
 
-  background: #fee2e2;
 
-  color: #991b1b;
+    .status-info {
 
-}
+      background: #e0f2fe;
 
-#reader {
+      color: #075985;
 
-  width: 100%;
+    }
 
-  max-width: 500px;
 
-  margin: 20px auto;
+    .status-success {
 
-  overflow: hidden;
+      background: #dcfce7;
 
-  border-radius: 15px;
+      color: #166534;
 
-}
+    }
 
-#details {
 
-  display: none;
+    .status-error {
 
-  margin-top: 20px;
+      background: #fee2e2;
 
-}
+      color: #991b1b;
 
-.detail {
+    }
 
-  display: flex;
 
-  justify-content: space-between;
+    /* CAMERA */
 
-  gap: 20px;
+    #reader {
 
-  padding: 14px 5px;
+      width: 100%;
 
-  border-bottom:
-    1px solid #e5e7eb;
+      max-width: 500px;
 
-}
+      margin: 15px auto 20px auto;
 
-.label {
+      overflow: hidden;
 
-  font-weight: bold;
+      border-radius: 15px;
 
-  color: #374151;
+    }
 
-}
 
-.value {
+    .camera-help {
 
-  text-align: right;
+      text-align: center;
 
-  color: #111827;
+      color: #6b7280;
 
-  word-break: break-word;
+      font-size: 14px;
 
-}
+      margin: 10px 0 20px 0;
 
-.buttons {
+    }
 
-  display: none;
 
-  gap: 15px;
+    /* DETAILS */
 
-  margin-top: 25px;
+    #details {
 
-}
+      display: none;
 
-button {
+      margin-top: 15px;
 
-  flex: 1;
+    }
 
-  border: none;
 
-  padding: 17px;
+    .detail {
 
-  border-radius: 12px;
+      display: flex;
 
-  font-size: 18px;
+      justify-content: space-between;
 
-  font-weight: bold;
+      align-items: center;
 
-  cursor: pointer;
+      gap: 20px;
 
-}
+      padding: 15px 5px;
 
-#inButton {
+      border-bottom: 1px solid #e5e7eb;
 
-  background: #16a34a;
+    }
 
-  color: white;
 
-}
+    .label {
 
-#outButton {
+      font-weight: bold;
 
-  background: #dc2626;
+      color: #374151;
 
-  color: white;
+      font-size: 17px;
 
-}
+    }
 
-button:disabled {
 
-  opacity: .5;
+    .value {
 
-  cursor: not-allowed;
+      color: #111827;
 
-}
+      text-align: right;
 
-#scanAgain {
+      font-size: 17px;
 
-  display: none;
+      word-break: break-word;
 
-  width: 100%;
+    }
 
-  margin-top: 15px;
 
-  background: #2563eb;
+    /* BUTTONS */
 
-  color: white;
+    #buttons {
 
-}
+      display: none;
 
-.help {
+      gap: 15px;
 
-  text-align: center;
+      margin-top: 25px;
 
-  color: #6b7280;
+    }
 
-  font-size: 14px;
 
-  margin-top: 10px;
+    button {
 
-}
+      flex: 1;
 
-@media(max-width:500px) {
+      border: none;
 
-  body {
-    padding: 10px;
-  }
+      padding: 18px;
 
-  .container {
-    padding: 18px;
-  }
+      border-radius: 12px;
 
-  h1 {
-    font-size: 23px;
-  }
+      font-size: 20px;
 
-  .detail {
-    display: block;
-  }
+      font-weight: bold;
 
-  .value {
-    text-align: left;
-    margin-top: 5px;
-  }
+      cursor: pointer;
 
-  .buttons {
-    flex-direction: column;
-  }
+      transition: opacity 0.2s;
 
-}
+    }
 
-</style>
+
+    button:disabled {
+
+      opacity: 0.50;
+
+      cursor: not-allowed;
+
+    }
+
+
+    #inButton {
+
+      background: #16a34a;
+
+      color: white;
+
+    }
+
+
+    #outButton {
+
+      background: #dc2626;
+
+      color: white;
+
+    }
+
+
+    #scanAgain {
+
+      display: none;
+
+      width: 100%;
+
+      margin-top: 15px;
+
+      background: #2563eb;
+
+      color: white;
+
+    }
+
+
+    /* MOBILE */
+
+    @media (max-width: 500px) {
+
+      body {
+
+        padding: 10px;
+
+      }
+
+
+      .container {
+
+        padding: 18px;
+
+      }
+
+
+      h1 {
+
+        font-size: 24px;
+
+      }
+
+
+      .detail {
+
+        display: block;
+
+      }
+
+
+      .label {
+
+        display: block;
+
+        margin-bottom: 6px;
+
+      }
+
+
+      .value {
+
+        display: block;
+
+        text-align: left;
+
+      }
+
+
+      #buttons {
+
+        flex-direction: column;
+
+      }
+
+    }
+
+  </style>
 
 </head>
 
@@ -275,160 +347,165 @@ button:disabled {
 <body>
 
 
-<div class="container">
-
-<h1>
-  QR Attendance Scanner
-</h1>
+  <div class="container">
 
 
-<div id="status"></div>
+    <h1>
+      QR Attendance Scanner
+    </h1>
 
 
-<div id="reader"></div>
+    <!-- STATUS MESSAGE -->
+
+    <div id="status"></div>
 
 
-<div class="help">
-  Scan the operator QR code.
-</div>
+    <!-- CAMERA -->
+
+    <div id="reader"></div>
 
 
-<!-- SCANNED INFORMATION -->
+    <div class="camera-help">
 
-<div id="details">
+      Scan the operator QR code.
 
-
-  <div class="detail">
-
-    <span class="label">
-      Operator / Driver
-    </span>
-
-    <span
-      class="value"
-      id="operator"
-    ></span>
-
-  </div>
+    </div>
 
 
-  <div class="detail">
+    <!-- SCANNED INFORMATION -->
 
-    <span class="label">
-      Start Time
-    </span>
+    <div id="details">
 
-    <span
-      class="value"
-      id="startTime"
+
+      <div class="detail">
+
+        <span class="label">
+          Operator / Driver
+        </span>
+
+        <span
+          class="value"
+          id="operator"
+        ></span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <span class="label">
+          Start Time
+        </span>
+
+        <span
+          class="value"
+          id="startTime"
+        >—</span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <span class="label">
+          End Time
+        </span>
+
+        <span
+          class="value"
+          id="endTime"
+        >—</span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <span class="label">
+          Date
+        </span>
+
+        <span
+          class="value"
+          id="date"
+        ></span>
+
+      </div>
+
+
+      <div class="detail">
+
+        <span class="label">
+          Operating Hrs
+        </span>
+
+        <span
+          class="value"
+          id="operatingHrs"
+        >—</span>
+
+      </div>
+
+
+    </div>
+
+
+    <!-- IN / OUT -->
+
+    <div id="buttons">
+
+      <button
+        id="inButton"
+        onclick="recordIN()"
+      >
+        IN
+      </button>
+
+
+      <button
+        id="outButton"
+        onclick="recordOUT()"
+      >
+        OUT
+      </button>
+
+    </div>
+
+
+    <!-- SCAN AGAIN -->
+
+    <button
+      id="scanAgain"
+      onclick="resetScanner()"
     >
-      —
-    </span>
+      SCAN AGAIN
+    </button>
+
 
   </div>
-
-
-  <div class="detail">
-
-    <span class="label">
-      End Time
-    </span>
-
-    <span
-      class="value"
-      id="endTime"
-    >
-      —
-    </span>
-
-  </div>
-
-
-  <div class="detail">
-
-    <span class="label">
-      Date
-    </span>
-
-    <span
-      class="value"
-      id="date"
-    ></span>
-
-  </div>
-
-
-  <div class="detail">
-
-    <span class="label">
-      Operating Hrs
-    </span>
-
-    <span
-      class="value"
-      id="operatingHrs"
-    >
-      —
-    </span>
-
-  </div>
-
-
-</div>
-
-
-<!-- IN / OUT -->
-
-<div
-  class="buttons"
-  id="buttons"
->
-
-  <button
-    id="inButton"
-    onclick="recordIN()"
-  >
-    IN
-  </button>
-
-
-  <button
-    id="outButton"
-    onclick="recordOUT()"
-  >
-    OUT
-  </button>
-
-</div>
-
-
-<button
-  id="scanAgain"
-  onclick="resetScanner()"
->
-  SCAN AGAIN
-</button>
-
-
-</div>
 
 
 <script>
 
 
-/*******************************************************
+/********************************************************
  * IMPORTANT
  *
- * PUT YOUR APPS SCRIPT /exec URL HERE
- *******************************************************/
+ * PUT YOUR GOOGLE APPS SCRIPT WEB APP /exec URL HERE.
+ *
+ * Example:
+ *
+ * const APPS_SCRIPT_URL =
+ *   "https://script.google.com/macros/s/XXXXXXXX/exec";
+ ********************************************************/
 
 const APPS_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyyXetVYvUwvSuM_HLoh_crohzncjKy6NtZ3ekpgg29eVH-08WGMJFGFLCatSCu1sva/exec";
+  "https://script.google.com/macros/s/AKfycbyQ_u8QCPCBtkSArndW5kzn7DZHjJjBokeLYrGXEPTL8GLcZ5qqNgSsIFyGR-FfEPzc/exec";
 
 
-/*******************************************************
- * VARIABLES
- *******************************************************/
+/********************************************************
+ * GLOBAL VARIABLES
+ ********************************************************/
 
 let scanner = null;
 
@@ -438,24 +515,34 @@ let scanTime = null;
 
 let processing = false;
 
+let sending = false;
 
-/*******************************************************
- * START
- *******************************************************/
+
+/********************************************************
+ * START APPLICATION
+ ********************************************************/
 
 window.addEventListener(
   "load",
-  startScanner
+  function () {
+
+    startScanner();
+
+  }
 );
 
 
-/*******************************************************
+/********************************************************
  * START CAMERA
- *******************************************************/
+ ********************************************************/
 
 async function startScanner() {
 
   try {
+
+    /*
+     * Camera requires HTTPS.
+     */
 
     if (
       !window.isSecureContext
@@ -467,6 +554,10 @@ async function startScanner() {
 
     }
 
+
+    /*
+     * Check camera support.
+     */
 
     if (
       !navigator.mediaDevices ||
@@ -486,14 +577,20 @@ async function startScanner() {
     );
 
 
+    /*
+     * Ask browser for camera permission.
+     */
+
     const stream =
       await navigator.mediaDevices
         .getUserMedia({
 
           video: {
+
             facingMode: {
               ideal: "environment"
             }
+
           },
 
           audio: false
@@ -501,17 +598,29 @@ async function startScanner() {
         });
 
 
+    /*
+     * We only use this request to obtain
+     * permission. html5-qrcode will open
+     * the camera afterward.
+     */
+
     stream
       .getTracks()
       .forEach(
-        track => track.stop()
+        function (track) {
+
+          track.stop();
+
+        }
       );
 
 
     createScanner();
 
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     console.error(
       "Camera error:",
@@ -529,7 +638,7 @@ async function startScanner() {
     ) {
 
       message =
-        "Camera requires HTTPS. Open the GitHub Pages URL.";
+        "Camera requires HTTPS. Open this page from GitHub Pages.";
 
     }
 
@@ -540,7 +649,7 @@ async function startScanner() {
     ) {
 
       message =
-        "Camera permission was denied. Allow camera access and reload.";
+        "Camera permission was denied. Allow camera access and reload the page.";
 
     }
 
@@ -551,7 +660,7 @@ async function startScanner() {
     ) {
 
       message =
-        "No camera was found.";
+        "No camera was found on this device.";
 
     }
 
@@ -562,7 +671,18 @@ async function startScanner() {
     ) {
 
       message =
-        "Camera is being used by another application.";
+        "The camera is being used by another application.";
+
+    }
+
+
+    else if (
+      error.message ===
+      "CAMERA_NOT_SUPPORTED"
+    ) {
+
+      message =
+        "This browser does not support camera access.";
 
     }
 
@@ -577,11 +697,15 @@ async function startScanner() {
 }
 
 
-/*******************************************************
- * CREATE SCANNER
- *******************************************************/
+/********************************************************
+ * CREATE QR SCANNER
+ ********************************************************/
 
 function createScanner() {
+
+  /*
+   * Clear old scanner.
+   */
 
   document.getElementById(
     "reader"
@@ -594,7 +718,7 @@ function createScanner() {
     );
 
 
-  const width =
+  const readerWidth =
     document.getElementById(
       "reader"
     ).clientWidth || 300;
@@ -603,7 +727,7 @@ function createScanner() {
   const qrSize =
     Math.min(
       Math.max(
-        width * 0.70,
+        readerWidth * 0.70,
         220
       ),
       350
@@ -640,134 +764,170 @@ function createScanner() {
 
     )
 
-    .then(() => {
+    .then(
 
-      showStatus(
-        "Camera ready. Scan an operator QR code.",
-        "success"
-      );
+      function () {
 
-    })
+        showStatus(
+          "Camera ready. Scan an operator QR code.",
+          "success"
+        );
 
-    .catch(error => {
+      }
 
-      console.error(
-        error
-      );
+    )
 
-      showStatus(
-        "Unable to start QR scanner.",
-        "error"
-      );
+    .catch(
 
-    });
+      function (error) {
+
+        console.error(
+          "Scanner start error:",
+          error
+        );
+
+
+        showStatus(
+          "Unable to start the QR scanner. Please check camera permission.",
+          "error"
+        );
+
+      }
+
+    );
 
 }
 
 
-/*******************************************************
- * SCAN FAILURE
- *******************************************************/
+/********************************************************
+ * NORMAL QR SCAN FAILURES
+ ********************************************************/
 
 function onScanFailure() {
 
-  // Normal scanning failures
-  // are ignored.
+  /*
+   * QR scanners call this continuously while
+   * looking for a QR code.
+   *
+   * Do nothing.
+   */
 
 }
 
 
-/*******************************************************
- * SUCCESSFUL SCAN
- *******************************************************/
+/********************************************************
+ * SUCCESSFUL QR SCAN
+ ********************************************************/
 
 async function onScanSuccess(
   decodedText
 ) {
 
+  /*
+   * Prevent multiple callbacks for
+   * the same QR code.
+   */
+
   if (processing) {
+
     return;
+
   }
 
 
   processing = true;
 
 
-  /***************************************************
-   * ACTUAL QR SCAN TIME
-   ***************************************************/
+  /*
+   * IMPORTANT:
+   *
+   * This is the actual moment the QR
+   * code was successfully scanned.
+   */
 
   scanTime =
     new Date()
       .toISOString();
 
 
+  /*
+   * Stop camera after successful scan.
+   */
+
   await stopScanner();
 
 
-  let data;
+  let qrData;
 
 
-  /***************************************************
-   * PARSE QR JSON
-   ***************************************************/
+  /******************************************************
+   * PARSE JSON
+   ******************************************************/
 
   try {
 
-    data =
+    qrData =
       JSON.parse(
         decodedText
       );
 
-  } catch (error) {
+  }
+
+  catch (error) {
 
     processing = false;
 
+
     showStatus(
-      "Invalid QR code. QR must contain JSON.",
+      "Invalid QR code. The QR code must contain JSON.",
       "error"
     );
 
+
     showScanAgain();
+
 
     return;
 
   }
 
 
-  /***************************************************
-   * VALIDATE OBJECT
-   ***************************************************/
+  /******************************************************
+   * MAKE SURE IT IS AN OBJECT
+   ******************************************************/
 
   if (
-    !data ||
-    typeof data !== "object" ||
-    Array.isArray(data)
+    !qrData ||
+    typeof qrData !== "object" ||
+    Array.isArray(qrData)
   ) {
 
     processing = false;
+
 
     showStatus(
       "Invalid QR data.",
       "error"
     );
 
+
     showScanAgain();
+
 
     return;
 
   }
 
 
-  /***************************************************
-   * ACTUAL QR FIELD
+  /******************************************************
+   * ACTUAL QR FIELD:
    *
    * NAME OF OPERATORS
-   ***************************************************/
+   ******************************************************/
 
-  let operator =
-    getOperatorName(
-      data
+  const operator =
+    getOperatorFromQR(
+      qrData
     );
 
 
@@ -775,21 +935,24 @@ async function onScanSuccess(
 
     processing = false;
 
+
     showStatus(
       "Invalid QR code. Missing: NAME OF OPERATORS",
       "error"
     );
 
+
     showScanAgain();
+
 
     return;
 
   }
 
 
-  /***************************************************
+  /******************************************************
    * SAVE OPERATOR
-   ***************************************************/
+   ******************************************************/
 
   scannedOperator =
     String(
@@ -797,9 +960,9 @@ async function onScanSuccess(
     ).trim();
 
 
-  /***************************************************
-   * DISPLAY
-   ***************************************************/
+  /******************************************************
+   * DISPLAY OPERATOR
+   ******************************************************/
 
   document.getElementById(
     "operator"
@@ -807,17 +970,23 @@ async function onScanSuccess(
     scannedOperator;
 
 
-  document.getElementById(
-    "date"
-  ).textContent =
-    formatToday();
-
+  /******************************************************
+   * DISPLAY SCAN TIME
+   ******************************************************/
 
   document.getElementById(
     "startTime"
   ).textContent =
-    "Will be recorded when IN is pressed";
+    formatTime(
+      new Date(
+        scanTime
+      )
+    );
 
+
+  /******************************************************
+   * END TIME
+   ******************************************************/
 
   document.getElementById(
     "endTime"
@@ -825,17 +994,43 @@ async function onScanSuccess(
     "Will be recorded when OUT is pressed";
 
 
+  /******************************************************
+   * DATE
+   ******************************************************/
+
+  document.getElementById(
+    "date"
+  ).textContent =
+    formatDate(
+      new Date(
+        scanTime
+      )
+    );
+
+
+  /******************************************************
+   * OPERATING HOURS
+   ******************************************************/
+
   document.getElementById(
     "operatingHrs"
   ).textContent =
     "Calculated after OUT";
 
 
+  /******************************************************
+   * SHOW DETAILS
+   ******************************************************/
+
   document.getElementById(
     "details"
   ).style.display =
     "block";
 
+
+  /******************************************************
+   * SHOW IN / OUT
+   ******************************************************/
 
   document.getElementById(
     "buttons"
@@ -849,6 +1044,10 @@ async function onScanSuccess(
     "none";
 
 
+  /******************************************************
+   * SUCCESS MESSAGE
+   ******************************************************/
+
   showStatus(
     "QR scanned successfully. Operator: " +
     scannedOperator,
@@ -858,20 +1057,23 @@ async function onScanSuccess(
 }
 
 
-/*******************************************************
- * GET OPERATOR NAME
+/********************************************************
+ * GET OPERATOR FROM ACTUAL QR
  *
- * Accepts the actual QR format:
+ * Actual QR:
  *
  * {
  *   "NAME OF OPERATORS": "BADS"
  * }
  *
- * Also handles harmless differences in
- * capitalization/spaces.
- *******************************************************/
+ * This function also tolerates:
+ *
+ * "Name of Operators"
+ * "name of operators"
+ * " NAME OF OPERATORS "
+ ********************************************************/
 
-function getOperatorName(
+function getOperatorFromQR(
   data
 ) {
 
@@ -882,25 +1084,43 @@ function getOperatorName(
 
 
   for (
-    const key of keys
+    let i = 0;
+    i < keys.length;
+    i++
   ) {
 
-    const normalized =
-      String(key)
-        .trim()
-        .toLowerCase()
-        .replace(
-          /\s+/g,
-          " "
-        );
+    const key =
+      String(
+        keys[i]
+      )
+      .trim()
+      .toLowerCase()
+      .replace(
+        /\s+/g,
+        " "
+      );
 
 
     if (
-      normalized ===
+      key ===
       "name of operators"
     ) {
 
-      return data[key];
+      const value =
+        data[
+          keys[i]
+        ];
+
+
+      if (
+        value !== undefined &&
+        value !== null &&
+        String(value).trim() !== ""
+      ) {
+
+        return value;
+
+      }
 
     }
 
@@ -912,16 +1132,16 @@ function getOperatorName(
 }
 
 
-/*******************************************************
- * IN
- *******************************************************/
+/********************************************************
+ * RECORD IN
+ ********************************************************/
 
 function recordIN() {
 
   if (!scannedOperator) {
 
     showStatus(
-      "Please scan a QR code first.",
+      "Please scan an operator QR code first.",
       "error"
     );
 
@@ -930,11 +1150,23 @@ function recordIN() {
   }
 
 
+  if (sending) {
+
+    return;
+
+  }
+
+
+  sending = true;
+
+
   disableButtons();
 
 
   showStatus(
-    "Recording IN...",
+    "Recording IN for " +
+    scannedOperator +
+    "...",
     "info"
   );
 
@@ -946,16 +1178,16 @@ function recordIN() {
 }
 
 
-/*******************************************************
- * OUT
- *******************************************************/
+/********************************************************
+ * RECORD OUT
+ ********************************************************/
 
 function recordOUT() {
 
   if (!scannedOperator) {
 
     showStatus(
-      "Please scan a QR code first.",
+      "Please scan an operator QR code first.",
       "error"
     );
 
@@ -964,14 +1196,31 @@ function recordOUT() {
   }
 
 
+  if (sending) {
+
+    return;
+
+  }
+
+
+  sending = true;
+
+
   disableButtons();
 
 
   showStatus(
-    "Recording OUT...",
+    "Recording OUT for " +
+    scannedOperator +
+    "...",
     "info"
   );
 
+
+  /*
+   * For OUT we want the actual
+   * OUT button time.
+   */
 
   sendToAppsScript(
     "OUT"
@@ -980,13 +1229,17 @@ function recordOUT() {
 }
 
 
-/*******************************************************
- * SEND TO GOOGLE APPS SCRIPT
- *******************************************************/
+/********************************************************
+ * SEND DATA TO GOOGLE APPS SCRIPT
+ ********************************************************/
 
 function sendToAppsScript(
   action
 ) {
+
+  /******************************************************
+   * CHECK URL
+   ******************************************************/
 
   if (
     !APPS_SCRIPT_URL ||
@@ -995,21 +1248,57 @@ function sendToAppsScript(
     ) === -1
   ) {
 
+    sending = false;
+
+
+    enableButtons();
+
+
     showStatus(
-      "Please enter your Apps Script /exec URL in index.html.",
+      "Apps Script URL is missing. Please put your /exec URL in index.html.",
       "error"
     );
 
-    enableButtons();
 
     return;
 
   }
 
 
-  /***************************************************
-   * Hidden iframe
-   ***************************************************/
+  /******************************************************
+   * IMPORTANT TIME
+   *
+   * IN:
+   *     use QR scan time
+   *
+   * OUT:
+   *     use actual OUT button time
+   ******************************************************/
+
+  let actionTime;
+
+
+  if (
+    action === "IN"
+  ) {
+
+    actionTime =
+      scanTime;
+
+  }
+
+  else {
+
+    actionTime =
+      new Date()
+        .toISOString();
+
+  }
+
+
+  /******************************************************
+   * HIDDEN IFRAME
+   ******************************************************/
 
   const iframeName =
     "appsScriptResponseFrame";
@@ -1028,14 +1317,18 @@ function sendToAppsScript(
         "iframe"
       );
 
+
     iframe.id =
       iframeName;
+
 
     iframe.name =
       iframeName;
 
+
     iframe.style.display =
       "none";
+
 
     document.body.appendChild(
       iframe
@@ -1044,9 +1337,9 @@ function sendToAppsScript(
   }
 
 
-  /***************************************************
-   * Form
-   ***************************************************/
+  /******************************************************
+   * FORM
+   ******************************************************/
 
   const form =
     document.createElement(
@@ -1070,9 +1363,9 @@ function sendToAppsScript(
     "none";
 
 
-  /***************************************************
-   * Add field
-   ***************************************************/
+  /******************************************************
+   * ADD FORM FIELD
+   ******************************************************/
 
   function addField(
     name,
@@ -1106,9 +1399,9 @@ function sendToAppsScript(
   }
 
 
-  /***************************************************
-   * DATA
-   ***************************************************/
+  /******************************************************
+   * SEND ACTION
+   ******************************************************/
 
   addField(
     "action",
@@ -1116,20 +1409,33 @@ function sendToAppsScript(
   );
 
 
+  /******************************************************
+   * SEND OPERATOR
+   *
+   * Apps Script receives this as:
+   *
+   * e.parameter.operator
+   ******************************************************/
+
   addField(
     "operator",
     scannedOperator
   );
 
 
-  /*
-   * This is the actual QR scan time.
-   */
+  /******************************************************
+   * SEND SCAN / ACTION TIME
+   ******************************************************/
+
   addField(
     "scanTime",
-    scanTime
+    actionTime
   );
 
+
+  /******************************************************
+   * SUBMIT
+   ******************************************************/
 
   document.body.appendChild(
     form
@@ -1139,89 +1445,118 @@ function sendToAppsScript(
   form.submit();
 
 
-  /***************************************************
-   * Wait for Apps Script
-   ***************************************************/
+  /******************************************************
+   * IMPORTANT
+   *
+   * Because GitHub Pages and Apps Script are different
+   * domains, the browser does not allow this page to
+   * directly read the Apps Script response.
+   *
+   * We therefore wait for the request to complete and
+   * then reset the scanner.
+   ******************************************************/
 
   setTimeout(
-    function() {
+    function () {
 
-      showStatus(
-
+      if (
         action === "IN"
+      ) {
 
-          ? "✓ IN successfully recorded for " +
-            scannedOperator
+        showStatus(
+          "✓ IN request sent for " +
+          scannedOperator +
+          ".",
+          "success"
+        );
 
-          : "✓ OUT successfully recorded for " +
-            scannedOperator,
+      }
 
-        "success"
+      else {
 
-      );
+        showStatus(
+          "✓ OUT request sent for " +
+          scannedOperator +
+          ".",
+          "success"
+        );
+
+      }
 
 
       form.remove();
 
+
+      sending = false;
+
+
+      /*
+       * Start a fresh scan automatically.
+       */
 
       setTimeout(
         resetScanner,
         1800
       );
 
+
     },
-
     1500
-
   );
 
 }
 
 
-/*******************************************************
- * DISABLE BUTTONS
- *******************************************************/
+/********************************************************
+ * DISABLE IN / OUT
+ ********************************************************/
 
 function disableButtons() {
 
   document.getElementById(
     "inButton"
-  ).disabled = true;
+  ).disabled =
+    true;
 
 
   document.getElementById(
     "outButton"
-  ).disabled = true;
+  ).disabled =
+    true;
 
 }
 
 
-/*******************************************************
- * ENABLE BUTTONS
- *******************************************************/
+/********************************************************
+ * ENABLE IN / OUT
+ ********************************************************/
 
 function enableButtons() {
 
   document.getElementById(
     "inButton"
-  ).disabled = false;
+  ).disabled =
+    false;
 
 
   document.getElementById(
     "outButton"
-  ).disabled = false;
+  ).disabled =
+    false;
 
 }
 
 
-/*******************************************************
- * STOP CAMERA
- *******************************************************/
+/********************************************************
+ * STOP SCANNER
+ ********************************************************/
 
 async function stopScanner() {
 
   if (!scanner) {
+
     return;
+
   }
 
 
@@ -1229,14 +1564,32 @@ async function stopScanner() {
 
     await scanner.stop();
 
-  } catch (error) {}
+  }
+
+  catch (error) {
+
+    console.log(
+      "Scanner stop:",
+      error
+    );
+
+  }
 
 
   try {
 
     await scanner.clear();
 
-  } catch (error) {}
+  }
+
+  catch (error) {
+
+    console.log(
+      "Scanner clear:",
+      error
+    );
+
+  }
 
 
   scanner = null;
@@ -1244,9 +1597,9 @@ async function stopScanner() {
 }
 
 
-/*******************************************************
- * SCAN AGAIN
- *******************************************************/
+/********************************************************
+ * SHOW SCAN AGAIN
+ ********************************************************/
 
 function showScanAgain() {
 
@@ -1258,21 +1611,34 @@ function showScanAgain() {
 }
 
 
-/*******************************************************
- * RESET
- *******************************************************/
+/********************************************************
+ * RESET EVERYTHING
+ ********************************************************/
 
 async function resetScanner() {
 
   await stopScanner();
 
 
-  scannedOperator = null;
+  scannedOperator =
+    null;
 
-  scanTime = null;
 
-  processing = false;
+  scanTime =
+    null;
 
+
+  processing =
+    false;
+
+
+  sending =
+    false;
+
+
+  /******************************************************
+   * HIDE DETAILS
+   ******************************************************/
 
   document.getElementById(
     "details"
@@ -1280,11 +1646,19 @@ async function resetScanner() {
     "none";
 
 
+  /******************************************************
+   * HIDE BUTTONS
+   ******************************************************/
+
   document.getElementById(
     "buttons"
   ).style.display =
     "none";
 
+
+  /******************************************************
+   * HIDE SCAN AGAIN
+   ******************************************************/
 
   document.getElementById(
     "scanAgain"
@@ -1292,14 +1666,16 @@ async function resetScanner() {
     "none";
 
 
+  /******************************************************
+   * ENABLE BUTTONS
+   ******************************************************/
+
   enableButtons();
 
 
-  document.getElementById(
-    "reader"
-  ).innerHTML =
-    "";
-
+  /******************************************************
+   * CLEAR DISPLAY
+   ******************************************************/
 
   document.getElementById(
     "operator"
@@ -1331,36 +1707,82 @@ async function resetScanner() {
     "—";
 
 
+  /******************************************************
+   * CLEAR CAMERA AREA
+   ******************************************************/
+
+  document.getElementById(
+    "reader"
+  ).innerHTML =
+    "";
+
+
+  /******************************************************
+   * START CAMERA AGAIN
+   ******************************************************/
+
   startScanner();
 
 }
 
 
-/*******************************************************
- * TODAY
- *******************************************************/
+/********************************************************
+ * FORMAT TIME
+ ********************************************************/
 
-function formatToday() {
+function formatTime(
+  date
+) {
 
-  const now =
-    new Date();
-
-
-  return now.toLocaleDateString(
+  return date.toLocaleTimeString(
     "en-PH",
     {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit"
+
+      hour:
+        "numeric",
+
+      minute:
+        "2-digit",
+
+      second:
+        "2-digit"
+
     }
   );
 
 }
 
 
-/*******************************************************
- * STATUS MESSAGE
- *******************************************************/
+/********************************************************
+ * FORMAT DATE
+ ********************************************************/
+
+function formatDate(
+  date
+) {
+
+  return date.toLocaleDateString(
+    "en-PH",
+    {
+
+      year:
+        "numeric",
+
+      month:
+        "2-digit",
+
+      day:
+        "2-digit"
+
+    }
+  );
+
+}
+
+
+/********************************************************
+ * SHOW STATUS
+ ********************************************************/
 
 function showStatus(
   message,
@@ -1378,7 +1800,40 @@ function showStatus(
 
 
   status.className =
-    type;
+    "";
+
+
+  if (
+    type === "info"
+  ) {
+
+    status.classList.add(
+      "status-info"
+    );
+
+  }
+
+
+  else if (
+    type === "success"
+  ) {
+
+    status.classList.add(
+      "status-success"
+    );
+
+  }
+
+
+  else if (
+    type === "error"
+  ) {
+
+    status.classList.add(
+      "status-error"
+    );
+
+  }
 
 
   status.style.display =
