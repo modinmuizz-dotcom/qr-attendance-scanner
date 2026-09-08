@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Attendance Scanner</title>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:20px;background:#f3f4f6;font-family:Arial,sans-serif}
+.container{max-width:650px;margin:auto;background:#fff;padding:25px;border-radius:18px;box-shadow:0 5px 25px rgba(0,0,0,.1)}
+h1{text-align:center;margin:0 0 18px;color:#111827;font-size:28px}
+#reader{width:100%;max-width:500px;margin:20px auto;overflow:hidden;border-radius:15px}
+#status{padding:14px;border-radius:10px;text-align:center;margin:15px 0;font-weight:bold;display:none}
+.info{background:#e0f2fe;color:#075985}.success{background:#dcfce7;color:#166534}.error{background:#fee2e2;color:#991b1b}
+#details{display:none;margin-top:20px}
+.detail{display:flex;justify-content:space-between;gap:20px;padding:13px 5px;border-bottom:1px solid #e5e7eb}
+.label{font-weight:bold;color:#374151}.value{text-align:right;color:#111827;word-break:break-word}
+.buttons{display:none;gap:15px;margin-top:25px}
+button{flex:1;border:0;padding:17px;border-radius:12px;font-size:18px;font-weight:bold;cursor:pointer}
+#inButton{background:#16a34a;color:white}#outButton{background:#dc2626;color:white}
+#scanAgain{display:none;width:100%;margin-top:15px;background:#2563eb;color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+.help{text-align:center;color:#6b7280;font-size:14px;margin-top:10px}
+@media(max-width:500px){body{padding:10px}.container{padding:18px}h1{font-size:23px}.detail{display:block}.value{text-align:left;margin-top:5px}.buttons{flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>QR Attendance Scanner</h1>
+<div id="status"></div>
+<div id="reader"></div>
+<div class="help">Allow camera access when Chrome asks, then point the camera at the QR code.</div>
+
+<div id="details">
+  <div class="detail"><span class="label">Operator / Driver</span><span class="value" id="operator"></span></div>
+  <div class="detail"><span class="label">Start Time</span><span class="value" id="startTime"></span></div>
+  <div class="detail"><span class="label">End Time</span><span class="value" id="endTime"></span></div>
+  <div class="detail"><span class="label">Date</span><span class="value" id="date"></span></div>
+  <div class="detail"><span class="label">Operating Hrs</span><span class="value" id="operatingHrs"></span></div>
+</div>
+
+<div class="buttons" id="buttons">
+  <button id="inButton" onclick="record('IN')">IN</button>
+  <button id="outButton" onclick="record('OUT')">OUT</button>
+</div>
+<button id="scanAgain" onclick="resetScanner()">SCAN AGAIN</button>
+</div>
+
+<script>
+// =====================================================
+// PASTE YOUR GOOGLE APPS SCRIPT /exec URL BELOW
+// =====================================================
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
+
+let scanner = null;
+let scannedData = null;
+let scanTime = null;
+let processing = false;
+
+window.addEventListener("load", startScanner);
+
+async function startScanner() {
+  try {
+    if (!window.isSecureContext) {
+      throw new Error("This page is not HTTPS.");
+    }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error("Camera API is not supported.");
+    }
+
+    showStatus("Requesting camera permission...", "info");
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false
+    });
+
+    stream.getTracks().forEach(t => t.stop());
+    createScanner();
+  } catch (error) {
+    console.error(error);
+    showStatus(
+      error.message === "This page is not HTTPS."
+        ? "Camera requires HTTPS. Open the GitHub Pages URL, not a local file."
+        : "Unable to open camera. Allow camera permission in Chrome and reload the page.",
+      "error"
+    );
+  }
+}
+
+function createScanner() {
+  document.getElementById("reader").innerHTML = "";
+
+  scanner = new Html5Qrcode("reader");
+
+  const width = document.getElementById("reader").clientWidth || 300;
+  const qrSize = Math.min(Math.max(width * 0.70, 220), 350);
+
+  scanner.start(
+    { facingMode: "environment" },
+    {
+      fps: 10,
+      qrbox: { width: qrSize, height: qrSize },
+      aspectRatio: 1.0
+    },
+    onScanSuccess,
+    onScanFailure
+  ).then(() => {
+    showStatus("Camera ready. Scan a QR code.", "success");
+  }).catch(error => {
+    console.error("Scanner start error:", error);
+    showStatus("Unable to start the QR scanner. Check camera permission.", "error");
+  });
+}
+
+function onScanFailure() {}
+
+async function onScanSuccess(decodedText) {
+  if (processing) return;
+  processing = true;
+
+  scanTime = new Date().toISOString();
+  await stopScanner();
+
+  let data;
+  try {
+    data = JSON.parse(decodedText);
+  } catch (e) {
+    processing = false;
+    showStatus("Invalid QR code. The QR code does not contain valid JSON.", "error");
+    document.getElementById("scanAgain").style.display = "block";
+    return;
+  }
+
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    processing = false;
+    showStatus("Invalid QR data.", "error");
+    document.getElementById("scanAgain").style.display = "block";
+    return;
+  }
+
+  const required = [
+    "Operator/Driver",
+    "Start Time",
+    "End Time",
+    "Operating Hrs",
+    "Date"
+  ];
+
+  for (const field of required) {
+    if (data[field] === undefined || data[field] === null || String(data[field]).trim() === "") {
+      processing = false;
+      showStatus("Invalid QR code. Missing: " + field, "error");
+      document.getElementById("scanAgain").style.display = "block";
+      return;
+    }
+  }
+
+  scannedData = data;
+
+  document.getElementById("operator").textContent = data["Operator/Driver"];
+  document.getElementById("startTime").textContent = data["Start Time"];
+  document.getElementById("endTime").textContent = data["End Time"];
+  document.getElementById("date").textContent = data["Date"];
+  document.getElementById("operatingHrs").textContent = data["Operating Hrs"];
+
+  document.getElementById("details").style.display = "block";
+  document.getElementById("buttons").style.display = "flex";
+  showStatus("QR code successfully scanned.", "success");
+}
+
+function record(action) {
+  if (!scannedData) {
+    showStatus("Please scan a QR code first.", "error");
+    return;
+  }
+
+  document.getElementById("inButton").disabled = true;
+  document.getElementById("outButton").disabled = true;
+  showStatus("Saving " + action + "...", "info");
+
+  submitToAppsScript(action);
+}
+
+function submitToAppsScript(action) {
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf("/exec") === -1) {
+    showStatus("Please enter your Apps Script /exec URL in index.html.", "error");
+    return;
+  }
+
+  const iframeName = "appsScriptResponseFrame";
+  let iframe = document.getElementById(iframeName);
+
+  if (!iframe) {
+    iframe = document.createElement("iframe");
+    iframe.id = iframeName;
+    iframe.name = iframeName;
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+  }
+
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = APPS_SCRIPT_URL;
+  form.target = iframeName;
+  form.style.display = "none";
+
+  const add = (name, value) => {
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = value == null ? "" : String(value);
+    form.appendChild(input);
+  };
+
+  add("action", action);
+  add("operator", scannedData["Operator/Driver"]);
+  add("startTime", scannedData["Start Time"]);
+  add("endTime", scannedData["End Time"]);
+  add("operatingHrs", scannedData["Operating Hrs"]);
+  add("date", scannedData["Date"]);
+  add("scanTime", scanTime);
+
+  document.body.appendChild(form);
+  form.submit();
+
+  setTimeout(() => {
+    showStatus(
+      action === "IN" ? "✓ IN successfully recorded." : "✓ OUT successfully recorded.",
+      "success"
+    );
+
+    form.remove();
+
+    setTimeout(resetScanner, 1500);
+  }, 1500);
+}
+
+async function stopScanner() {
+  if (!scanner) return;
+  try { await scanner.stop(); } catch (e) {}
+  try { await scanner.clear(); } catch (e) {}
+  scanner = null;
+}
+
+async function resetScanner() {
+  await stopScanner();
+
+  scannedData = null;
+  scanTime = null;
+  processing = false;
+
+  document.getElementById("details").style.display = "none";
+  document.getElementById("buttons").style.display = "none";
+  document.getElementById("scanAgain").style.display = "none";
+  document.getElementById("inButton").disabled = false;
+  document.getElementById("outButton").disabled = false;
+  document.getElementById("reader").innerHTML = "";
+
+  for (const id of ["operator","startTime","endTime","date","operatingHrs"]) {
+    document.getElementById(id).textContent = "";
+  }
+
+  startScanner();
+}
+
+function showStatus(message, type) {
+  const status = document.getElementById("status");
+  status.textContent = message;
+  status.className = type;
+  status.style.display = "block";
+}
+</script>
+</body>
+</html>
