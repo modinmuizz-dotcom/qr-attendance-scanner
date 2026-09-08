@@ -1,56 +1,58 @@
 /*******************************************************
+ * AMANAH CONSTRUCTION SERVICES
  * QR ATTENDANCE SYSTEM
- * GOOGLE APPS SCRIPT BACKEND
  *
- * ACTUAL QR FORMAT:
+ * QR FORMAT:
  *
  * {
  *   "NAME OF OPERATORS": "BADS"
  * }
  *
  * GOOGLE SHEET:
- * Sheet name:
- *   Daily Activity
+ * Daily Activity
  *
- * Required headers:
- *   Operator/Driver
- *   Start Time
- *   End Time
- *   Date
- *   Operating Hrs
+ * HEADER ROW:
+ * Automatically detected
  *
- * Headers can be in ANY column order.
+ * REQUIRED HEADERS:
+ * Date
+ * Operator/Driver
+ * Start Time
+ * End Time
+ * Operating Hrs
  *******************************************************/
 
 
-/**
- * Web App test
- */
 function doGet(e) {
 
   return ContentService
     .createTextOutput(
-      "QR Attendance Backend is running."
+      JSON.stringify({
+        success: true,
+        message: "QR Attendance Backend is working."
+      })
     )
     .setMimeType(
-      ContentService.MimeType.TEXT
+      ContentService.MimeType.JSON
     );
 
 }
 
 
-/**
- * Receives IN and OUT requests
- * from the GitHub Pages scanner.
- */
+/*******************************************************
+ * RECEIVE IN / OUT FROM GITHUB SCANNER
+ *******************************************************/
+
 function doPost(e) {
 
   try {
 
     if (!e || !e.parameter) {
+
       throw new Error(
-        "No data received."
+        "No data was received from the scanner."
       );
+
     }
 
 
@@ -62,24 +64,39 @@ function doPost(e) {
       .toUpperCase();
 
 
-    if (
-      action !== "IN" &&
-      action !== "OUT"
-    ) {
-
-      throw new Error(
-        "Invalid action."
-      );
-
-    }
-
-
     var operator =
       String(
         e.parameter.operator || ""
       )
       .trim();
 
+
+    var scanTime =
+      String(
+        e.parameter.scanTime || ""
+      )
+      .trim();
+
+
+    /***************************************************
+     * VALIDATE ACTION
+     ***************************************************/
+
+    if (
+      action !== "IN" &&
+      action !== "OUT"
+    ) {
+
+      throw new Error(
+        "Invalid action: " + action
+      );
+
+    }
+
+
+    /***************************************************
+     * VALIDATE OPERATOR
+     ***************************************************/
 
     if (!operator) {
 
@@ -90,23 +107,33 @@ function doPost(e) {
     }
 
 
+    /***************************************************
+     * GET SPREADSHEET
+     ***************************************************/
+
     var spreadsheet =
-      SpreadsheetApp.getActiveSpreadsheet();
+      SpreadsheetApp
+        .getActiveSpreadsheet();
 
 
     if (!spreadsheet) {
 
       throw new Error(
-        "Unable to open spreadsheet."
+        "Unable to access the Google Spreadsheet."
       );
 
     }
 
 
+    /***************************************************
+     * GET DAILY ACTIVITY SHEET
+     ***************************************************/
+
     var sheet =
-      spreadsheet.getSheetByName(
-        "Daily Activity"
-      );
+      spreadsheet
+        .getSheetByName(
+          "Daily Activity"
+        );
 
 
     if (!sheet) {
@@ -119,259 +146,216 @@ function doPost(e) {
 
 
     /***************************************************
-     * FIND REQUIRED COLUMNS
+     * FIND HEADER ROW + COLUMNS
      ***************************************************/
 
-    var lastColumn =
-      sheet.getLastColumn();
+    var headerInfo =
+      findHeaders_(
+        sheet
+      );
 
 
-    if (lastColumn < 1) {
+    if (!headerInfo) {
 
       throw new Error(
-        "Daily Activity has no headers."
+        "Required headers were not found."
       );
 
     }
 
 
-    var headers =
-      sheet
-        .getRange(
-          1,
-          1,
-          1,
-          lastColumn
-        )
-        .getValues()[0];
+    var headerRow =
+      headerInfo.row;
 
 
-    var operatorCol =
-      findColumn_(
-        headers,
-        [
-          "Operator/Driver",
-          "Operator / Driver",
-          "Operator",
-          "Driver"
-        ]
-      );
-
-
-    var startCol =
-      findColumn_(
-        headers,
-        [
-          "Start Time",
-          "StartTime",
-          "Start"
-        ]
-      );
-
-
-    var endCol =
-      findColumn_(
-        headers,
-        [
-          "End Time",
-          "EndTime",
-          "End"
-        ]
-      );
-
-
-    var dateCol =
-      findColumn_(
-        headers,
-        [
-          "Date"
-        ]
-      );
-
-
-    var operatingCol =
-      findColumn_(
-        headers,
-        [
-          "Operating Hrs",
-          "Operating Hours",
-          "Operating Hrs.",
-          "OperatingHrs",
-          "OperatingHours"
-        ]
-      );
+    var cols =
+      headerInfo.columns;
 
 
     /***************************************************
-     * CHECK COLUMNS
+     * TIMEZONE
      ***************************************************/
 
-    if (!operatorCol) {
-
-      throw new Error(
-        'Column "Operator/Driver" was not found.'
-      );
-
-    }
+    var timezone =
+      spreadsheet
+        .getSpreadsheetTimeZone();
 
 
-    if (!startCol) {
+    if (!timezone) {
 
-      throw new Error(
-        'Column "Start Time" was not found.'
-      );
+      timezone =
+        "Asia/Manila";
 
     }
 
-
-    if (!endCol) {
-
-      throw new Error(
-        'Column "End Time" was not found.'
-      );
-
-    }
-
-
-    if (!dateCol) {
-
-      throw new Error(
-        'Column "Date" was not found.'
-      );
-
-    }
-
-
-    if (!operatingCol) {
-
-      throw new Error(
-        'Column "Operating Hrs" was not found.'
-      );
-
-    }
-
-
-    /***************************************************
-     * CURRENT DATE/TIME
-     ***************************************************/
 
     var now =
       new Date();
 
 
-    var timezone =
-      spreadsheet.getSpreadsheetTimeZone();
-
-
-    if (!timezone) {
-      timezone = Session.getScriptTimeZone();
-    }
-
-
-    if (!timezone) {
-      timezone = "Asia/Manila";
-    }
-
-
-    var todayText =
-      Utilities.formatDate(
-        now,
-        timezone,
-        "yyyy-MM-dd"
-      );
-
-
     /***************************************************
-     * IN
+     * =================================================
+     *                    IN
+     * =================================================
      ***************************************************/
 
-    if (action === "IN") {
+    if (
+      action === "IN"
+    ) {
 
       /*************************************************
-       * Prevent duplicate open IN
+       * CHECK FOR EXISTING OPEN IN
        *************************************************/
 
-      var existingRow =
-        findOpenAttendanceRow_(
+      var existingOpenRow =
+        findOpenRow_(
           sheet,
-          operatorCol,
-          startCol,
-          endCol,
-          dateCol,
-          todayText,
-          timezone
+          headerRow,
+          cols,
+          operator
         );
 
 
-      if (existingRow) {
+      if (existingOpenRow) {
 
         throw new Error(
           operator +
-          " already has an open IN record today."
+          " already has an open IN record in row " +
+          existingOpenRow +
+          ". Please OUT first."
         );
 
       }
 
 
       /*************************************************
-       * Create new row
+       * USE QR SCAN TIME
        *************************************************/
 
-      var newRow =
-        new Array(lastColumn)
-          .fill("");
-
-
-      // Operator
-      newRow[
-        operatorCol - 1
-      ] = operator;
-
-
-      // Actual QR scan time
-      var scanTime =
+      var startDate =
         parseDateTime_(
-          e.parameter.scanTime
+          scanTime
         );
 
 
-      if (!scanTime) {
-        scanTime = now;
+      if (!startDate) {
+
+        startDate =
+          now;
+
       }
 
 
-      newRow[
-        startCol - 1
-      ] = scanTime;
+      /*************************************************
+       * NEXT ROW
+       *************************************************/
 
-
-      // End Time blank
-      newRow[
-        endCol - 1
-      ] = "";
-
-
-      // Date
-      newRow[
-        dateCol - 1
-      ] =
-        createDateOnly_(
-          todayText
+      var newRow =
+        Math.max(
+          sheet.getLastRow() + 1,
+          headerRow + 1
         );
 
 
-      // Operating hours blank
-      newRow[
-        operatingCol - 1
-      ] = "";
+      /*************************************************
+       * OPERATOR
+       *************************************************/
+
+      sheet
+        .getRange(
+          newRow,
+          cols.operator
+        )
+        .setValue(
+          operator
+        );
 
 
-      sheet.appendRow(
-        newRow
-      );
+      /*************************************************
+       * START TIME
+       *************************************************/
+
+      sheet
+        .getRange(
+          newRow,
+          cols.start
+        )
+        .setValue(
+          startDate
+        );
 
 
-      return createResponse_({
+      sheet
+        .getRange(
+          newRow,
+          cols.start
+        )
+        .setNumberFormat(
+          "h:mm:ss AM/PM"
+        );
+
+
+      /*************************************************
+       * END TIME
+       *************************************************/
+
+      sheet
+        .getRange(
+          newRow,
+          cols.end
+        )
+        .clearContent();
+
+
+      /*************************************************
+       * DATE
+       *************************************************/
+
+      sheet
+        .getRange(
+          newRow,
+          cols.date
+        )
+        .setValue(
+          startDate
+        );
+
+
+      sheet
+        .getRange(
+          newRow,
+          cols.date
+        )
+        .setNumberFormat(
+          "mm/dd/yyyy"
+        );
+
+
+      /*************************************************
+       * OPERATING HOURS
+       *************************************************/
+
+      sheet
+        .getRange(
+          newRow,
+          cols.operating
+        )
+        .clearContent();
+
+
+      /*************************************************
+       * FORCE SAVE
+       *************************************************/
+
+      SpreadsheetApp
+        .flush();
+
+
+      /*************************************************
+       * RESPONSE
+       *************************************************/
+
+      return response_({
 
         success: true,
 
@@ -379,14 +363,18 @@ function doPost(e) {
 
         operator: operator,
 
-        message:
-          "IN successfully recorded.",
+        row: newRow,
 
         time:
-          formatDateTime_(
-            scanTime,
-            timezone
-          )
+          Utilities.formatDate(
+            startDate,
+            timezone,
+            "h:mm:ss a"
+          ),
+
+        message:
+          "IN successfully recorded for " +
+          operator
 
       });
 
@@ -394,24 +382,32 @@ function doPost(e) {
 
 
     /***************************************************
-     * OUT
+     * =================================================
+     *                    OUT
+     * =================================================
      ***************************************************/
 
-    if (action === "OUT") {
+    if (
+      action === "OUT"
+    ) {
 
       /*************************************************
-       * Find latest open IN record
+       * IMPORTANT:
+       *
+       * Find the latest OPEN IN for this operator.
+       *
+       * We DO NOT restrict this to today's date.
+       *
+       * This fixes the problem where the IN row has
+       * a different Date value.
        *************************************************/
 
       var openRow =
-        findOpenAttendanceRow_(
+        findOpenRow_(
           sheet,
-          operatorCol,
-          startCol,
-          endCol,
-          dateCol,
-          todayText,
-          timezone
+          headerRow,
+          cols,
+          operator
         );
 
 
@@ -420,36 +416,37 @@ function doPost(e) {
         throw new Error(
           "No open IN record was found for " +
           operator +
-          " today."
+          "."
         );
 
       }
 
 
       /*************************************************
-       * Get actual IN time
+       * GET START TIME
        *************************************************/
 
       var startValue =
         sheet
           .getRange(
             openRow,
-            startCol
+            cols.start
           )
           .getValue();
 
 
       var startDate =
-        parseSheetDateTime_(
-          startValue,
-          timezone
+        parseSheetDate_(
+          startValue
         );
 
 
       if (!startDate) {
 
         throw new Error(
-          "The existing Start Time is invalid."
+          "The Start Time in row " +
+          openRow +
+          " is invalid."
         );
 
       }
@@ -464,7 +461,7 @@ function doPost(e) {
 
 
       /*************************************************
-       * Calculate operating hours
+       * CALCULATE DIFFERENCE
        *************************************************/
 
       var milliseconds =
@@ -472,7 +469,9 @@ function doPost(e) {
         startDate.getTime();
 
 
-      if (milliseconds < 0) {
+      if (
+        milliseconds < 0
+      ) {
 
         throw new Error(
           "OUT time cannot be earlier than IN time."
@@ -481,67 +480,79 @@ function doPost(e) {
       }
 
 
-      var totalMinutes =
+      /*************************************************
+       * CONVERT TO GOOGLE SHEETS DURATION
+       *
+       * Google Sheets stores duration as a fraction
+       * of one day.
+       *************************************************/
+
+      var duration =
         milliseconds /
-        1000 /
-        60;
-
-
-      var hours =
-        Math.floor(
-          totalMinutes / 60
-        );
-
-
-      var minutes =
-        Math.round(
-          totalMinutes % 60
-        );
-
-
-      // Correct 60-minute rounding
-      if (minutes >= 60) {
-
-        hours++;
-        minutes = 0;
-
-      }
-
-
-      var operatingHours =
-        hours +
-        ":" +
-        String(minutes)
-          .padStart(2, "0");
+        86400000;
 
 
       /*************************************************
-       * UPDATE SAME ROW
+       * WRITE END TIME
        *************************************************/
 
-      // End Time
       sheet
         .getRange(
           openRow,
-          endCol
+          cols.end
         )
         .setValue(
           endDate
         );
 
 
-      // Operating Hrs
       sheet
         .getRange(
           openRow,
-          operatingCol
+          cols.end
         )
-        .setValue(
-          operatingHours
+        .setNumberFormat(
+          "h:mm:ss AM/PM"
         );
 
 
-      return createResponse_({
+      /*************************************************
+       * WRITE OPERATING HOURS
+       *************************************************/
+
+      sheet
+        .getRange(
+          openRow,
+          cols.operating
+        )
+        .setValue(
+          duration
+        );
+
+
+      sheet
+        .getRange(
+          openRow,
+          cols.operating
+        )
+        .setNumberFormat(
+          "[h]:mm"
+        );
+
+
+      /*************************************************
+       * FORCE SAVE
+       *************************************************/
+
+      SpreadsheetApp
+        .flush();
+
+
+      /*************************************************
+       * RESPONSE
+       *************************************************/
+
+      return response_({
 
         success: true,
 
@@ -549,17 +560,30 @@ function doPost(e) {
 
         operator: operator,
 
-        message:
-          "OUT successfully recorded.",
+        row: openRow,
 
-        time:
-          formatDateTime_(
+        startTime:
+          Utilities.formatDate(
+            startDate,
+            timezone,
+            "h:mm:ss a"
+          ),
+
+        endTime:
+          Utilities.formatDate(
             endDate,
-            timezone
+            timezone,
+            "h:mm:ss a"
           ),
 
         operatingHrs:
-          operatingHours
+          formatDuration_(
+            milliseconds
+          ),
+
+        message:
+          "OUT successfully recorded for " +
+          operator
 
       });
 
@@ -571,14 +595,22 @@ function doPost(e) {
     );
 
 
-  } catch (error) {
+  }
 
-    return createResponse_({
+  catch (error) {
+
+    console.error(
+      error
+    );
+
+
+    return response_({
 
       success: false,
 
       error:
-        error.message
+        error.message ||
+        String(error)
 
     });
 
@@ -588,237 +620,129 @@ function doPost(e) {
 
 
 /*******************************************************
- * FIND OPEN ATTENDANCE ROW
+ * FIND HEADER ROW
  *
- * Finds the latest row for the operator where:
- *
- * Start Time = exists
- * End Time   = blank
- * Date       = today
+ * Searches rows 1 through 10.
  *******************************************************/
 
-function findOpenAttendanceRow_(
-  sheet,
-  operatorCol,
-  startCol,
-  endCol,
-  dateCol,
-  todayText,
-  timezone
+function findHeaders_(
+  sheet
 ) {
 
-  var lastRow =
-    sheet.getLastRow();
+  var maxRows =
+    Math.min(
+      10,
+      sheet.getMaxRows()
+    );
 
 
-  if (lastRow < 2) {
-    return null;
-  }
-
-
-  var lastColumn =
+  var maxColumns =
     sheet.getLastColumn();
+
+
+  if (
+    maxRows < 1 ||
+    maxColumns < 1
+  ) {
+
+    return null;
+
+  }
 
 
   var values =
     sheet
       .getRange(
-        2,
         1,
-        lastRow - 1,
-        lastColumn
-      )
-      .getValues();
-
-
-  var foundRow =
-    null;
-
-
-  // Search from newest to oldest
-  for (
-    var i =
-      values.length - 1;
-    i >= 0;
-    i--
-  ) {
-
-    var row =
-      values[i];
-
-
-    var rowNumber =
-      i + 2;
-
-
-    var rowOperator =
-      String(
-        row[
-          operatorCol - 1
-        ] || ""
-      )
-      .trim();
-
-
-    if (
-      rowOperator.toLowerCase() !==
-      String(operatorFromGlobal_())
-        .toLowerCase()
-    ) {
-
-      // This function is called with operator
-      // indirectly below, so don't use this path.
-    }
-
-  }
-
-
-  return findOpenAttendanceRowForOperator_(
-    sheet,
-    operatorCol,
-    startCol,
-    endCol,
-    dateCol,
-    todayText,
-    timezone,
-    null
-  );
-
-}
-
-
-/*******************************************************
- * OPERATOR-SPECIFIC OPEN ROW SEARCH
- *******************************************************/
-
-function findOpenAttendanceRowForOperator_(
-  sheet,
-  operatorCol,
-  startCol,
-  endCol,
-  dateCol,
-  todayText,
-  timezone,
-  operator
-) {
-
-  // This helper is retained for compatibility.
-  // Actual search is handled below.
-  return null;
-
-}
-
-
-/*******************************************************
- * GLOBAL OPERATOR HELPER
- *******************************************************/
-
-var CURRENT_OPERATOR_ = "";
-
-
-/*******************************************************
- * REPLACEMENT OPEN ROW SEARCH
- *******************************************************/
-
-function findOpenAttendanceRow_OLD_(
-  sheet,
-  operatorCol,
-  startCol,
-  endCol,
-  dateCol,
-  todayText,
-  timezone,
-  operator
-) {
-
-  var lastRow =
-    sheet.getLastRow();
-
-
-  if (lastRow < 2) {
-    return null;
-  }
-
-
-  var lastColumn =
-    sheet.getLastColumn();
-
-
-  var values =
-    sheet
-      .getRange(
-        2,
         1,
-        lastRow - 1,
-        lastColumn
+        maxRows,
+        maxColumns
       )
-      .getValues();
+      .getDisplayValues();
 
 
   for (
-    var i =
-      values.length - 1;
-    i >= 0;
-    i--
+    var r = 0;
+    r < values.length;
+    r++
   ) {
 
     var row =
-      values[i];
+      values[r];
 
 
-    var rowOperator =
-      String(
-        row[
-          operatorCol - 1
-        ] || ""
-      )
-      .trim();
+    var columns = {
+
+      date:
+        findColumnInRow_(
+          row,
+          [
+            "Date"
+          ]
+        ),
+
+      operator:
+        findColumnInRow_(
+          row,
+          [
+            "Operator/Driver",
+            "Operator / Driver",
+            "Operator",
+            "Driver"
+          ]
+        ),
+
+      start:
+        findColumnInRow_(
+          row,
+          [
+            "Start Time",
+            "StartTime",
+            "Start"
+          ]
+        ),
+
+      end:
+        findColumnInRow_(
+          row,
+          [
+            "End Time",
+            "EndTime",
+            "End"
+          ]
+        ),
+
+      operating:
+        findColumnInRow_(
+          row,
+          [
+            "Operating Hrs",
+            "Operating Hours",
+            "Operating Hrs.",
+            "OperatingHrs"
+          ]
+        )
+
+    };
 
 
     if (
-      rowOperator.toLowerCase() !==
-      operator.toLowerCase()
-    ) {
-      continue;
-    }
-
-
-    var start =
-      row[
-        startCol - 1
-      ];
-
-
-    var end =
-      row[
-        endCol - 1
-      ];
-
-
-    var date =
-      row[
-        dateCol - 1
-      ];
-
-
-    if (!start || end) {
-      continue;
-    }
-
-
-    var rowDate =
-      formatDateOnly_(
-        date,
-        timezone
-      );
-
-
-    if (
-      rowDate ===
-      todayText
+      columns.date &&
+      columns.operator &&
+      columns.start &&
+      columns.end &&
+      columns.operating
     ) {
 
-      return i + 2;
+      return {
+
+        row:
+          r + 1,
+
+        columns:
+          columns
+
+      };
 
     }
 
@@ -834,33 +758,33 @@ function findOpenAttendanceRow_OLD_(
  * FIND COLUMN
  *******************************************************/
 
-function findColumn_(
-  headers,
-  possibleNames
+function findColumnInRow_(
+  row,
+  names
 ) {
 
   for (
     var i = 0;
-    i < headers.length;
+    i < row.length;
     i++
   ) {
 
-    var header =
+    var current =
       normalizeHeader_(
-        headers[i]
+        row[i]
       );
 
 
     for (
       var j = 0;
-      j < possibleNames.length;
+      j < names.length;
       j++
     ) {
 
       if (
-        header ===
+        current ===
         normalizeHeader_(
-          possibleNames[j]
+          names[j]
         )
       ) {
 
@@ -900,6 +824,129 @@ function normalizeHeader_(
 
 
 /*******************************************************
+ * FIND OPEN IN ROW
+ *
+ * IMPORTANT:
+ * Does NOT require today's date.
+ *
+ * Finds the latest row for this operator where:
+ *
+ * Start Time = has value
+ * End Time   = empty
+ *******************************************************/
+
+function findOpenRow_(
+  sheet,
+  headerRow,
+  cols,
+  operator
+) {
+
+  var lastRow =
+    sheet.getLastRow();
+
+
+  if (
+    lastRow <= headerRow
+  ) {
+
+    return null;
+
+  }
+
+
+  var lastColumn =
+    sheet.getLastColumn();
+
+
+  var values =
+    sheet
+      .getRange(
+        headerRow + 1,
+        1,
+        lastRow - headerRow,
+        lastColumn
+      )
+      .getValues();
+
+
+  /*
+   * Search from bottom to top.
+   *
+   * Therefore the newest open IN is selected.
+   */
+
+  for (
+    var i =
+      values.length - 1;
+    i >= 0;
+    i--
+  ) {
+
+    var row =
+      values[i];
+
+
+    var rowOperator =
+      String(
+        row[
+          cols.operator - 1
+        ] || ""
+      )
+      .trim();
+
+
+    if (
+      rowOperator.toLowerCase() !==
+      operator.toLowerCase()
+    ) {
+
+      continue;
+
+    }
+
+
+    var start =
+      row[
+        cols.start - 1
+      ];
+
+
+    var end =
+      row[
+        cols.end - 1
+      ];
+
+
+    /*
+     * OPEN RECORD:
+     *
+     * Start exists
+     * End is empty
+     */
+
+    if (
+      start &&
+      !end
+    ) {
+
+      return (
+        headerRow +
+        1 +
+        i
+      );
+
+    }
+
+  }
+
+
+  return null;
+
+}
+
+
+/*******************************************************
  * PARSE DATE/TIME
  *******************************************************/
 
@@ -908,12 +955,16 @@ function parseDateTime_(
 ) {
 
   if (!value) {
+
     return null;
+
   }
 
 
   var date =
-    new Date(value);
+    new Date(
+      value
+    );
 
 
   if (
@@ -933,18 +984,18 @@ function parseDateTime_(
 
 
 /*******************************************************
- * PARSE SHEET DATE/TIME
+ * PARSE SHEET DATE
  *******************************************************/
 
-function parseSheetDateTime_(
-  value,
-  timezone
+function parseSheetDate_(
+  value
 ) {
 
   if (
     Object.prototype.toString.call(
       value
-    ) === "[object Date]"
+    ) ===
+    "[object Date]"
   ) {
 
     if (
@@ -960,33 +1011,6 @@ function parseSheetDateTime_(
   }
 
 
-  if (
-    typeof value === "number"
-  ) {
-
-    var date =
-      new Date(
-        Math.round(
-          (value - 25569) *
-          86400 *
-          1000
-        )
-      );
-
-
-    if (
-      !isNaN(
-        date.getTime()
-      )
-    ) {
-
-      return date;
-
-    }
-
-  }
-
-
   return parseDateTime_(
     value
   );
@@ -995,101 +1019,41 @@ function parseSheetDateTime_(
 
 
 /*******************************************************
- * CREATE DATE ONLY
+ * FORMAT DURATION
  *******************************************************/
 
-function createDateOnly_(
-  dateText
+function formatDuration_(
+  milliseconds
 ) {
 
-  var parts =
-    dateText.split("-");
+  var totalMinutes =
+    Math.round(
+      milliseconds /
+      60000
+    );
 
 
-  if (
-    parts.length !== 3
-  ) {
-
-    return new Date();
-
-  }
+  var hours =
+    Math.floor(
+      totalMinutes /
+      60
+    );
 
 
-  return new Date(
-    Number(parts[0]),
-    Number(parts[1]) - 1,
-    Number(parts[2])
-  );
-
-}
+  var minutes =
+    totalMinutes %
+    60;
 
 
-/*******************************************************
- * FORMAT DATE ONLY
- *******************************************************/
-
-function formatDateOnly_(
-  value,
-  timezone
-) {
-
-  if (!value) {
-    return "";
-  }
-
-
-  var date;
-
-
-  if (
-    Object.prototype.toString.call(
-      value
-    ) === "[object Date]"
-  ) {
-
-    date = value;
-
-  } else {
-
-    date =
-      new Date(value);
-
-  }
-
-
-  if (
-    isNaN(
-      date.getTime()
+  return (
+    hours +
+    ":" +
+    String(
+      minutes
+    ).padStart(
+      2,
+      "0"
     )
-  ) {
-
-    return "";
-
-  }
-
-
-  return Utilities.formatDate(
-    date,
-    timezone,
-    "yyyy-MM-dd"
-  );
-
-}
-
-
-/*******************************************************
- * FORMAT DATE/TIME
- *******************************************************/
-
-function formatDateTime_(
-  date,
-  timezone
-) {
-
-  return Utilities.formatDate(
-    date,
-    timezone,
-    "yyyy-MM-dd HH:mm:ss"
   );
 
 }
@@ -1099,13 +1063,15 @@ function formatDateTime_(
  * JSON RESPONSE
  *******************************************************/
 
-function createResponse_(
+function response_(
   data
 ) {
 
   return ContentService
     .createTextOutput(
-      JSON.stringify(data)
+      JSON.stringify(
+        data
+      )
     )
     .setMimeType(
       ContentService.MimeType.JSON
