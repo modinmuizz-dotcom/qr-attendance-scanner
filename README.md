@@ -13,7 +13,7 @@
   <title>QR Attendance Scanner</title>
 
   <!-- HTML5 QR CODE -->
-  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
+  <script src="[https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js](https://script.google.com/macros/s/AKfycbyCbQgOTaaPtx3Q7D3IlM4ZuK199PtZsQ8UfXFBZ9RGR20vkHpdgX4n_o3oKHlDw2Ez/exec)"></script>
 
   <style>
 
