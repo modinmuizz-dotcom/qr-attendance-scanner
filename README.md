@@ -1,1 +1,1 @@
-# qr-attendance-scanner
+index.html
