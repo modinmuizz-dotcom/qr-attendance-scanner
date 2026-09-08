@@ -1,6 +1,12 @@
 /************************************************************
  * AMANAH CONSTRUCTION SERVICES
- * TRUCKS & HEAVY EQUIPMENT DAILY ACTIVITY REPORT
+ * QR ATTENDANCE SYSTEM
+ *
+ * GOOGLE SHEET:
+ * Daily Activity
+ *
+ * TIMEZONE:
+ * Asia/Manila
  *
  * QR FORMAT:
  *
@@ -8,13 +14,8 @@
  *   "NAME OF OPERATORS": "BADS"
  * }
  *
- * SHEET:
- * Daily Activity
+ * REQUIRED SHEET HEADERS:
  *
- * TIMEZONE:
- * Asia/Manila
- *
- * REQUIRED HEADERS:
  * Date
  * Operator/Driver
  * Start Time
@@ -49,7 +50,7 @@ function doGet(e) {
 
 
 /************************************************************
- * RECEIVE IN / OUT
+ * RECEIVE DATA FROM GITHUB SCANNER
  ************************************************************/
 
 function doPost(e) {
@@ -70,10 +71,10 @@ function doPost(e) {
 
 
     /******************************************************
-     * GET PARAMETERS
+     * GET DATA
      ******************************************************/
 
-    var action =
+    const action =
       String(
         e.parameter.action || ""
       )
@@ -81,14 +82,14 @@ function doPost(e) {
       .toUpperCase();
 
 
-    var operator =
+    const operator =
       String(
         e.parameter.operator || ""
       )
       .trim();
 
 
-    var scanTime =
+    const scanTime =
       String(
         e.parameter.scanTime || ""
       )
@@ -128,7 +129,7 @@ function doPost(e) {
      * GET SPREADSHEET
      ******************************************************/
 
-    var spreadsheet =
+    const spreadsheet =
       SpreadsheetApp.getActiveSpreadsheet();
 
 
@@ -143,8 +144,6 @@ function doPost(e) {
 
     /******************************************************
      * FORCE PHILIPPINE TIMEZONE
-     *
-     * This is VERY IMPORTANT.
      ******************************************************/
 
     spreadsheet.setSpreadsheetTimeZone(
@@ -153,10 +152,10 @@ function doPost(e) {
 
 
     /******************************************************
-     * GET SHEET
+     * GET DAILY ACTIVITY SHEET
      ******************************************************/
 
-    var sheet =
+    const sheet =
       spreadsheet.getSheetByName(
         SHEET_NAME
       );
@@ -174,10 +173,10 @@ function doPost(e) {
 
 
     /******************************************************
-     * FIND HEADERS
+     * FIND REQUIRED COLUMNS
      ******************************************************/
 
-    var headerInfo =
+    const headerInfo =
       findHeaders_(
         sheet
       );
@@ -186,27 +185,27 @@ function doPost(e) {
     if (!headerInfo) {
 
       throw new Error(
-        "Required headers were not found."
+        "Required columns were not found. " +
+        "Please check Date, Operator/Driver, Start Time, " +
+        "End Time and Operating Hrs."
       );
 
     }
 
 
-    var headerRow =
+    const headerRow =
       headerInfo.row;
 
 
-    var cols =
+    const cols =
       headerInfo.columns;
 
 
     /******************************************************
-     * GET SERVER TIME
-     *
-     * Apps Script server time is used for OUT.
+     * SERVER TIME
      ******************************************************/
 
-    var serverNow =
+    const serverNow =
       new Date();
 
 
@@ -224,7 +223,7 @@ function doPost(e) {
        * CHECK FOR EXISTING OPEN IN
        ****************************************************/
 
-      var existingRow =
+      const existingRow =
         findOpenRow_(
           sheet,
           headerRow,
@@ -246,19 +245,21 @@ function doPost(e) {
 
 
       /****************************************************
-       * GET ACTUAL SCAN TIME
+       * GET QR SCAN TIME
        *
-       * The browser sends the exact timestamp when
-       * the QR scan succeeded.
-       *
-       * If unavailable, use server time.
+       * index.html sends an ISO timestamp when the
+       * QR scan succeeds.
        ****************************************************/
 
-      var startDate =
+      let startDate =
         parseDateTime_(
           scanTime
         );
 
+
+      /****************************************************
+       * FALLBACK TO SERVER TIME
+       ****************************************************/
 
       if (!startDate) {
 
@@ -269,10 +270,10 @@ function doPost(e) {
 
 
       /****************************************************
-       * FIND NEXT ROW
+       * CREATE NEW ROW
        ****************************************************/
 
-      var newRow =
+      const newRow =
         Math.max(
           sheet.getLastRow() + 1,
           headerRow + 1
@@ -342,7 +343,7 @@ function doPost(e) {
 
 
       /****************************************************
-       * CLEAR END TIME
+       * END TIME
        ****************************************************/
 
       sheet
@@ -354,7 +355,7 @@ function doPost(e) {
 
 
       /****************************************************
-       * CLEAR OPERATING HOURS
+       * OPERATING HOURS
        ****************************************************/
 
       sheet
@@ -366,7 +367,7 @@ function doPost(e) {
 
 
       /****************************************************
-       * FORCE SAVE
+       * SAVE
        ****************************************************/
 
       SpreadsheetApp.flush();
@@ -422,10 +423,14 @@ function doPost(e) {
     ) {
 
       /****************************************************
-       * FIND LATEST OPEN IN
+       * FIND OPEN IN
+       *
+       * Searches the entire sheet.
+       *
+       * It does NOT require the Date to be today.
        ****************************************************/
 
-      var openRow =
+      const openRow =
         findOpenRow_(
           sheet,
           headerRow,
@@ -449,7 +454,7 @@ function doPost(e) {
        * GET START TIME
        ****************************************************/
 
-      var startValue =
+      const startValue =
         sheet
           .getRange(
             openRow,
@@ -458,7 +463,7 @@ function doPost(e) {
           .getValue();
 
 
-      var startDate =
+      const startDate =
         parseSheetDate_(
           startValue
         );
@@ -478,18 +483,18 @@ function doPost(e) {
       /****************************************************
        * ACTUAL OUT TIME
        *
-       * Server timestamp.
+       * This is the Apps Script server timestamp.
        ****************************************************/
 
-      var endDate =
+      const endDate =
         serverNow;
 
 
       /****************************************************
-       * CALCULATE OPERATING HOURS
+       * CALCULATE OPERATING TIME
        ****************************************************/
 
-      var milliseconds =
+      const milliseconds =
         endDate.getTime() -
         startDate.getTime();
 
@@ -507,9 +512,11 @@ function doPost(e) {
 
       /****************************************************
        * GOOGLE SHEETS DURATION
+       *
+       * One day = 86,400,000 milliseconds.
        ****************************************************/
 
-      var duration =
+      const duration =
         milliseconds /
         86400000;
 
@@ -540,6 +547,15 @@ function doPost(e) {
 
       /****************************************************
        * WRITE OPERATING HOURS
+       *
+       * IMPORTANT:
+       *
+       * [h]:mm:ss displays the EXACT duration.
+       *
+       * Example:
+       *
+       * 2 minutes 57 seconds
+       * = 0:02:57
        ****************************************************/
 
       sheet
@@ -558,12 +574,12 @@ function doPost(e) {
           cols.operating
         )
         .setNumberFormat(
-          "[h]:mm"
+          "[h]:mm:ss"
         );
 
 
       /****************************************************
-       * FORCE SAVE
+       * SAVE
        ****************************************************/
 
       SpreadsheetApp.flush();
@@ -650,23 +666,21 @@ function doPost(e) {
 
 
 /************************************************************
- * FIND HEADER ROW
- *
- * Searches rows 1 through 10.
+ * FIND HEADER ROW AND COLUMNS
  ************************************************************/
 
 function findHeaders_(
   sheet
 ) {
 
-  var maxRows =
+  const maxRows =
     Math.min(
       10,
       sheet.getMaxRows()
     );
 
 
-  var maxColumns =
+  const maxColumns =
     sheet.getLastColumn();
 
 
@@ -680,7 +694,7 @@ function findHeaders_(
   }
 
 
-  var values =
+  const values =
     sheet
       .getRange(
         1,
@@ -691,17 +705,21 @@ function findHeaders_(
       .getDisplayValues();
 
 
+  /******************************************************
+   * SEARCH FIRST 10 ROWS
+   ******************************************************/
+
   for (
-    var r = 0;
+    let r = 0;
     r < values.length;
     r++
   ) {
 
-    var row =
+    const row =
       values[r];
 
 
-    var columns = {
+    const columns = {
 
       date:
         findColumnInRow_(
@@ -785,7 +803,7 @@ function findHeaders_(
 
 
 /************************************************************
- * FIND COLUMN
+ * FIND COLUMN IN HEADER ROW
  ************************************************************/
 
 function findColumnInRow_(
@@ -794,19 +812,19 @@ function findColumnInRow_(
 ) {
 
   for (
-    var i = 0;
+    let i = 0;
     i < row.length;
     i++
   ) {
 
-    var current =
+    const current =
       normalizeHeader_(
         row[i]
       );
 
 
     for (
-      var j = 0;
+      let j = 0;
       j < names.length;
       j++
     ) {
@@ -854,15 +872,15 @@ function normalizeHeader_(
 
 
 /************************************************************
- * FIND OPEN IN
+ * FIND OPEN IN RECORD
  *
- * Finds the latest record where:
+ * Finds the newest row for this operator where:
  *
- * Operator = selected operator
- * Start Time = exists
- * End Time = empty
+ * Start Time = NOT EMPTY
+ * End Time   = EMPTY
  *
- * It intentionally does NOT restrict by date.
+ * IMPORTANT:
+ * Date is NOT checked.
  ************************************************************/
 
 function findOpenRow_(
@@ -872,7 +890,7 @@ function findOpenRow_(
   operator
 ) {
 
-  var lastRow =
+  const lastRow =
     sheet.getLastRow();
 
 
@@ -885,11 +903,11 @@ function findOpenRow_(
   }
 
 
-  var lastColumn =
+  const lastColumn =
     sheet.getLastColumn();
 
 
-  var values =
+  const values =
     sheet
       .getRange(
         headerRow + 1,
@@ -900,18 +918,24 @@ function findOpenRow_(
       .getValues();
 
 
+  /******************************************************
+   * SEARCH FROM BOTTOM TO TOP
+   *
+   * This finds the newest open record.
+   ******************************************************/
+
   for (
-    var i =
+    let i =
       values.length - 1;
     i >= 0;
     i--
   ) {
 
-    var row =
+    const row =
       values[i];
 
 
-    var rowOperator =
+    const rowOperator =
       String(
         row[
           cols.operator - 1
@@ -919,6 +943,10 @@ function findOpenRow_(
       )
       .trim();
 
+
+    /****************************************************
+     * OPERATOR MATCH
+     ****************************************************/
 
     if (
       rowOperator.toLowerCase() !==
@@ -930,17 +958,21 @@ function findOpenRow_(
     }
 
 
-    var start =
+    const start =
       row[
         cols.start - 1
       ];
 
 
-    var end =
+    const end =
       row[
         cols.end - 1
       ];
 
+
+    /****************************************************
+     * OPEN RECORD
+     ****************************************************/
 
     if (
       start &&
@@ -964,7 +996,7 @@ function findOpenRow_(
 
 
 /************************************************************
- * PARSE DATE/TIME
+ * PARSE DATE / TIME
  ************************************************************/
 
 function parseDateTime_(
@@ -978,7 +1010,7 @@ function parseDateTime_(
   }
 
 
-  var date =
+  const date =
     new Date(
       value
     );
@@ -1001,7 +1033,7 @@ function parseDateTime_(
 
 
 /************************************************************
- * PARSE SHEET DATE
+ * PARSE DATE FROM GOOGLE SHEETS
  ************************************************************/
 
 function parseSheetDate_(
@@ -1036,29 +1068,39 @@ function parseSheetDate_(
 
 
 /************************************************************
- * FORMAT OPERATING HOURS
+ * FORMAT DURATION
  ************************************************************/
 
 function formatDuration_(
   milliseconds
 ) {
 
-  var totalMinutes =
+  const totalSeconds =
     Math.round(
       milliseconds /
-      60000
+      1000
     );
 
 
-  var hours =
+  const hours =
     Math.floor(
-      totalMinutes /
+      totalSeconds /
+      3600
+    );
+
+
+  const minutes =
+    Math.floor(
+      (
+        totalSeconds %
+        3600
+      ) /
       60
     );
 
 
-  var minutes =
-    totalMinutes %
+  const seconds =
+    totalSeconds %
     60;
 
 
@@ -1067,6 +1109,13 @@ function formatDuration_(
     ":" +
     String(
       minutes
+    ).padStart(
+      2,
+      "0"
+    ) +
+    ":" +
+    String(
+      seconds
     ).padStart(
       2,
       "0"
