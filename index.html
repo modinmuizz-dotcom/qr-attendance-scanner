@@ -13,7 +13,7 @@
   <title>QR Attendance Scanner</title>
 
 
-  <!-- HTML5 QR CODE LIBRARY -->
+  <!-- HTML5 QR CODE -->
   <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
 
 
@@ -48,23 +48,29 @@
 
       margin: 0 auto;
 
-      background: #ffffff;
+      background: white;
 
       padding: 25px;
 
-      border-radius: 18px;
+      border-radius: 20px;
 
       box-shadow:
-        0 5px 25px rgba(0, 0, 0, 0.10);
+        0 5px 25px rgba(
+          0,
+          0,
+          0,
+          0.10
+        );
 
     }
 
 
     h1 {
 
-      margin: 0 0 20px 0;
-
       text-align: center;
+
+      margin:
+        0 0 20px 0;
 
       color: #111827;
 
@@ -73,7 +79,9 @@
     }
 
 
-    /* STATUS */
+    /************************************************
+     * STATUS
+     ************************************************/
 
     #status {
 
@@ -81,7 +89,7 @@
 
       padding: 15px;
 
-      margin-bottom: 18px;
+      margin-bottom: 20px;
 
       border-radius: 10px;
 
@@ -123,7 +131,9 @@
     }
 
 
-    /* CAMERA */
+    /************************************************
+     * CAMERA
+     ************************************************/
 
     #reader {
 
@@ -131,7 +141,8 @@
 
       max-width: 500px;
 
-      margin: 15px auto 20px auto;
+      margin:
+        10px auto 20px auto;
 
       overflow: hidden;
 
@@ -146,20 +157,20 @@
 
       color: #6b7280;
 
-      font-size: 14px;
+      font-size: 16px;
 
-      margin: 10px 0 20px 0;
+      margin-bottom: 20px;
 
     }
 
 
-    /* DETAILS */
+    /************************************************
+     * DETAILS
+     ************************************************/
 
     #details {
 
       display: none;
-
-      margin-top: 15px;
 
     }
 
@@ -168,15 +179,15 @@
 
       display: flex;
 
-      justify-content: space-between;
-
-      align-items: center;
+      justify-content:
+        space-between;
 
       gap: 20px;
 
-      padding: 15px 5px;
+      padding: 16px 5px;
 
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom:
+        1px solid #e5e7eb;
 
     }
 
@@ -200,12 +211,12 @@
 
       font-size: 17px;
 
-      word-break: break-word;
-
     }
 
 
-    /* BUTTONS */
+    /************************************************
+     * BUTTONS
+     ************************************************/
 
     #buttons {
 
@@ -234,14 +245,12 @@
 
       cursor: pointer;
 
-      transition: opacity 0.2s;
-
     }
 
 
     button:disabled {
 
-      opacity: 0.50;
+      opacity: 0.5;
 
       cursor: not-allowed;
 
@@ -272,7 +281,7 @@
 
       width: 100%;
 
-      margin-top: 15px;
+      margin-top: 20px;
 
       background: #2563eb;
 
@@ -281,9 +290,13 @@
     }
 
 
-    /* MOBILE */
+    /************************************************
+     * MOBILE
+     ************************************************/
 
-    @media (max-width: 500px) {
+    @media (
+      max-width: 500px
+    ) {
 
       body {
 
@@ -301,7 +314,7 @@
 
       h1 {
 
-        font-size: 24px;
+        font-size: 25px;
 
       }
 
@@ -317,7 +330,7 @@
 
         display: block;
 
-        margin-bottom: 6px;
+        margin-bottom: 5px;
 
       }
 
@@ -355,14 +368,18 @@
     </h1>
 
 
-    <!-- STATUS MESSAGE -->
+    <!-- STATUS -->
 
-    <div id="status"></div>
+    <div
+      id="status"
+    ></div>
 
 
     <!-- CAMERA -->
 
-    <div id="reader"></div>
+    <div
+      id="reader"
+    ></div>
 
 
     <div class="camera-help">
@@ -372,9 +389,11 @@
     </div>
 
 
-    <!-- SCANNED INFORMATION -->
+    <!-- DETAILS -->
 
-    <div id="details">
+    <div
+      id="details"
+    >
 
 
       <div class="detail">
@@ -450,9 +469,11 @@
     </div>
 
 
-    <!-- IN / OUT -->
+    <!-- IN / OUT BUTTONS -->
 
-    <div id="buttons">
+    <div
+      id="buttons"
+    >
 
       <button
         id="inButton"
@@ -489,37 +510,45 @@
 
 
 /********************************************************
- * IMPORTANT
+ * GOOGLE APPS SCRIPT WEB APP URL
  *
- * PUT YOUR GOOGLE APPS SCRIPT WEB APP /exec URL HERE.
- *
- * Example:
- *
- * const APPS_SCRIPT_URL =
- *   "https://script.google.com/macros/s/XXXXXXXX/exec";
+ * REPLACE THIS WITH YOUR ACTUAL /exec URL.
  ********************************************************/
 
 const APPS_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbyGJWOpgT2ULMbXR1KDRfSz6j79iyfZ9QSaEGvxuP1B-74lYZRnLCQdPdazMLOFsCn4/exec";
+  "https://script.google.com/macros/s/AKfycbyLhrjPFqbDFOtYK5ar4Rf8wzAIMQeRQh0HVlLA4qIMjDp-P0_8dFc5ofzuU2fommin/exec";
 
 
 /********************************************************
- * GLOBAL VARIABLES
+ * PHILIPPINE TIMEZONE
  ********************************************************/
 
-let scanner = null;
-
-let scannedOperator = null;
-
-let scanTime = null;
-
-let processing = false;
-
-let sending = false;
+const TIMEZONE =
+  "Asia/Manila";
 
 
 /********************************************************
- * START APPLICATION
+ * VARIABLES
+ ********************************************************/
+
+let scanner =
+  null;
+
+let scannedOperator =
+  null;
+
+let scanTime =
+  null;
+
+let processing =
+  false;
+
+let sending =
+  false;
+
+
+/********************************************************
+ * START
  ********************************************************/
 
 window.addEventListener(
@@ -540,9 +569,11 @@ async function startScanner() {
 
   try {
 
-    /*
-     * Camera requires HTTPS.
-     */
+    showStatus(
+      "Starting camera...",
+      "info"
+    );
+
 
     if (
       !window.isSecureContext
@@ -554,10 +585,6 @@ async function startScanner() {
 
     }
 
-
-    /*
-     * Check camera support.
-     */
 
     if (
       !navigator.mediaDevices ||
@@ -571,14 +598,8 @@ async function startScanner() {
     }
 
 
-    showStatus(
-      "Requesting camera permission...",
-      "info"
-    );
-
-
     /*
-     * Ask browser for camera permission.
+     * Request camera permission.
      */
 
     const stream =
@@ -599,9 +620,7 @@ async function startScanner() {
 
 
     /*
-     * We only use this request to obtain
-     * permission. html5-qrcode will open
-     * the camera afterward.
+     * Stop permission-test stream.
      */
 
     stream
@@ -616,7 +635,6 @@ async function startScanner() {
 
 
     createScanner();
-
 
   }
 
@@ -633,23 +651,12 @@ async function startScanner() {
 
 
     if (
-      error.message ===
-      "HTTPS_REQUIRED"
-    ) {
-
-      message =
-        "Camera requires HTTPS. Open this page from GitHub Pages.";
-
-    }
-
-
-    else if (
       error.name ===
       "NotAllowedError"
     ) {
 
       message =
-        "Camera permission was denied. Allow camera access and reload the page.";
+        "Camera permission was denied. Please allow camera access.";
 
     }
 
@@ -660,7 +667,7 @@ async function startScanner() {
     ) {
 
       message =
-        "No camera was found on this device.";
+        "No camera was found.";
 
     }
 
@@ -672,6 +679,17 @@ async function startScanner() {
 
       message =
         "The camera is being used by another application.";
+
+    }
+
+
+    else if (
+      error.message ===
+      "HTTPS_REQUIRED"
+    ) {
+
+      message =
+        "Camera requires HTTPS. Please use the GitHub Pages HTTPS address.";
 
     }
 
@@ -698,18 +716,15 @@ async function startScanner() {
 
 
 /********************************************************
- * CREATE QR SCANNER
+ * CREATE SCANNER
  ********************************************************/
 
 function createScanner() {
 
-  /*
-   * Clear old scanner.
-   */
-
   document.getElementById(
     "reader"
-  ).innerHTML = "";
+  ).innerHTML =
+    "";
 
 
   scanner =
@@ -718,7 +733,7 @@ function createScanner() {
     );
 
 
-  const readerWidth =
+  const width =
     document.getElementById(
       "reader"
     ).clientWidth || 300;
@@ -727,7 +742,7 @@ function createScanner() {
   const qrSize =
     Math.min(
       Math.max(
-        readerWidth * 0.70,
+        width * 0.70,
         220
       ),
       350
@@ -765,7 +780,6 @@ function createScanner() {
     )
 
     .then(
-
       function () {
 
         showStatus(
@@ -774,75 +788,67 @@ function createScanner() {
         );
 
       }
-
     )
 
     .catch(
-
       function (error) {
 
         console.error(
-          "Scanner start error:",
+          "Scanner error:",
           error
         );
 
 
         showStatus(
-          "Unable to start the QR scanner. Please check camera permission.",
+          "Unable to start the QR scanner.",
           "error"
         );
 
       }
-
     );
 
 }
 
 
 /********************************************************
- * NORMAL QR SCAN FAILURES
+ * QR SCAN FAILURE
  ********************************************************/
 
 function onScanFailure() {
 
   /*
-   * QR scanners call this continuously while
-   * looking for a QR code.
-   *
-   * Do nothing.
+   * Ignore normal scanning failures.
    */
 
 }
 
 
 /********************************************************
- * SUCCESSFUL QR SCAN
+ * QR SCAN SUCCESS
  ********************************************************/
 
 async function onScanSuccess(
   decodedText
 ) {
 
-  /*
-   * Prevent multiple callbacks for
-   * the same QR code.
-   */
-
-  if (processing) {
+  if (
+    processing
+  ) {
 
     return;
 
   }
 
 
-  processing = true;
+  processing =
+    true;
 
 
   /*
-   * IMPORTANT:
+   * Capture EXACT browser time when
+   * the QR code was successfully scanned.
    *
-   * This is the actual moment the QR
-   * code was successfully scanned.
+   * ISO timestamp is an absolute timestamp.
    */
 
   scanTime =
@@ -851,7 +857,7 @@ async function onScanSuccess(
 
 
   /*
-   * Stop camera after successful scan.
+   * Stop camera.
    */
 
   await stopScanner();
@@ -861,7 +867,7 @@ async function onScanSuccess(
 
 
   /******************************************************
-   * PARSE JSON
+   * PARSE QR JSON
    ******************************************************/
 
   try {
@@ -875,11 +881,12 @@ async function onScanSuccess(
 
   catch (error) {
 
-    processing = false;
+    processing =
+      false;
 
 
     showStatus(
-      "Invalid QR code. The QR code must contain JSON.",
+      "Invalid QR code. The QR must contain JSON.",
       "error"
     );
 
@@ -893,7 +900,7 @@ async function onScanSuccess(
 
 
   /******************************************************
-   * MAKE SURE IT IS AN OBJECT
+   * CHECK OBJECT
    ******************************************************/
 
   if (
@@ -902,7 +909,8 @@ async function onScanSuccess(
     Array.isArray(qrData)
   ) {
 
-    processing = false;
+    processing =
+      false;
 
 
     showStatus(
@@ -920,9 +928,7 @@ async function onScanSuccess(
 
 
   /******************************************************
-   * ACTUAL QR FIELD:
-   *
-   * NAME OF OPERATORS
+   * GET OPERATOR
    ******************************************************/
 
   const operator =
@@ -933,7 +939,8 @@ async function onScanSuccess(
 
   if (!operator) {
 
-    processing = false;
+    processing =
+      false;
 
 
     showStatus(
@@ -971,13 +978,13 @@ async function onScanSuccess(
 
 
   /******************************************************
-   * DISPLAY SCAN TIME
+   * DISPLAY PHILIPPINE SCAN TIME
    ******************************************************/
 
   document.getElementById(
     "startTime"
   ).textContent =
-    formatTime(
+    formatPhilippineTime(
       new Date(
         scanTime
       )
@@ -1001,7 +1008,7 @@ async function onScanSuccess(
   document.getElementById(
     "date"
   ).textContent =
-    formatDate(
+    formatPhilippineDate(
       new Date(
         scanTime
       )
@@ -1029,7 +1036,7 @@ async function onScanSuccess(
 
 
   /******************************************************
-   * SHOW IN / OUT
+   * SHOW BUTTONS
    ******************************************************/
 
   document.getElementById(
@@ -1045,7 +1052,7 @@ async function onScanSuccess(
 
 
   /******************************************************
-   * SUCCESS MESSAGE
+   * STATUS
    ******************************************************/
 
   showStatus(
@@ -1058,19 +1065,13 @@ async function onScanSuccess(
 
 
 /********************************************************
- * GET OPERATOR FROM ACTUAL QR
+ * GET OPERATOR FROM QR
  *
- * Actual QR:
+ * ACTUAL FORMAT:
  *
  * {
  *   "NAME OF OPERATORS": "BADS"
  * }
- *
- * This function also tolerates:
- *
- * "Name of Operators"
- * "name of operators"
- * " NAME OF OPERATORS "
  ********************************************************/
 
 function getOperatorFromQR(
@@ -1089,7 +1090,7 @@ function getOperatorFromQR(
     i++
   ) {
 
-    const key =
+    const normalized =
       String(
         keys[i]
       )
@@ -1102,7 +1103,7 @@ function getOperatorFromQR(
 
 
     if (
-      key ===
+      normalized ===
       "name of operators"
     ) {
 
@@ -1115,7 +1116,9 @@ function getOperatorFromQR(
       if (
         value !== undefined &&
         value !== null &&
-        String(value).trim() !== ""
+        String(
+          value
+        ).trim() !== ""
       ) {
 
         return value;
@@ -1138,7 +1141,9 @@ function getOperatorFromQR(
 
 function recordIN() {
 
-  if (!scannedOperator) {
+  if (
+    !scannedOperator
+  ) {
 
     showStatus(
       "Please scan an operator QR code first.",
@@ -1150,14 +1155,17 @@ function recordIN() {
   }
 
 
-  if (sending) {
+  if (
+    sending
+  ) {
 
     return;
 
   }
 
 
-  sending = true;
+  sending =
+    true;
 
 
   disableButtons();
@@ -1184,7 +1192,9 @@ function recordIN() {
 
 function recordOUT() {
 
-  if (!scannedOperator) {
+  if (
+    !scannedOperator
+  ) {
 
     showStatus(
       "Please scan an operator QR code first.",
@@ -1196,14 +1206,17 @@ function recordOUT() {
   }
 
 
-  if (sending) {
+  if (
+    sending
+  ) {
 
     return;
 
   }
 
 
-  sending = true;
+  sending =
+    true;
 
 
   disableButtons();
@@ -1218,8 +1231,7 @@ function recordOUT() {
 
 
   /*
-   * For OUT we want the actual
-   * OUT button time.
+   * OUT time is generated RIGHT NOW.
    */
 
   sendToAppsScript(
@@ -1230,7 +1242,7 @@ function recordOUT() {
 
 
 /********************************************************
- * SEND DATA TO GOOGLE APPS SCRIPT
+ * SEND TO GOOGLE APPS SCRIPT
  ********************************************************/
 
 function sendToAppsScript(
@@ -1248,14 +1260,15 @@ function sendToAppsScript(
     ) === -1
   ) {
 
-    sending = false;
+    sending =
+      false;
 
 
     enableButtons();
 
 
     showStatus(
-      "Apps Script URL is missing. Please put your /exec URL in index.html.",
+      "Please enter your Apps Script /exec URL in index.html.",
       "error"
     );
 
@@ -1266,13 +1279,10 @@ function sendToAppsScript(
 
 
   /******************************************************
-   * IMPORTANT TIME
+   * ACTION TIME
    *
-   * IN:
-   *     use QR scan time
-   *
-   * OUT:
-   *     use actual OUT button time
+   * IN  = QR scan time
+   * OUT = actual OUT button time
    ******************************************************/
 
   let actionTime;
@@ -1364,7 +1374,7 @@ function sendToAppsScript(
 
 
   /******************************************************
-   * ADD FORM FIELD
+   * ADD FIELD
    ******************************************************/
 
   function addField(
@@ -1389,7 +1399,9 @@ function sendToAppsScript(
     input.value =
       value == null
         ? ""
-        : String(value);
+        : String(
+            value
+          );
 
 
     form.appendChild(
@@ -1400,7 +1412,7 @@ function sendToAppsScript(
 
 
   /******************************************************
-   * SEND ACTION
+   * SEND DATA
    ******************************************************/
 
   addField(
@@ -1409,23 +1421,11 @@ function sendToAppsScript(
   );
 
 
-  /******************************************************
-   * SEND OPERATOR
-   *
-   * Apps Script receives this as:
-   *
-   * e.parameter.operator
-   ******************************************************/
-
   addField(
     "operator",
     scannedOperator
   );
 
-
-  /******************************************************
-   * SEND SCAN / ACTION TIME
-   ******************************************************/
 
   addField(
     "scanTime",
@@ -1433,27 +1433,20 @@ function sendToAppsScript(
   );
 
 
-  /******************************************************
-   * SUBMIT
-   ******************************************************/
-
   document.body.appendChild(
     form
   );
 
 
+  /******************************************************
+   * SUBMIT
+   ******************************************************/
+
   form.submit();
 
 
   /******************************************************
-   * IMPORTANT
-   *
-   * Because GitHub Pages and Apps Script are different
-   * domains, the browser does not allow this page to
-   * directly read the Apps Script response.
-   *
-   * We therefore wait for the request to complete and
-   * then reset the scanner.
+   * SHOW RESULT
    ******************************************************/
 
   setTimeout(
@@ -1464,9 +1457,14 @@ function sendToAppsScript(
       ) {
 
         showStatus(
-          "✓ IN request sent for " +
+          "✓ IN recorded for " +
           scannedOperator +
-          ".",
+          " at " +
+          formatPhilippineTime(
+            new Date(
+              actionTime
+            )
+          ),
           "success"
         );
 
@@ -1475,9 +1473,14 @@ function sendToAppsScript(
       else {
 
         showStatus(
-          "✓ OUT request sent for " +
+          "✓ OUT recorded for " +
           scannedOperator +
-          ".",
+          " at " +
+          formatPhilippineTime(
+            new Date(
+              actionTime
+            )
+          ),
           "success"
         );
 
@@ -1487,16 +1490,21 @@ function sendToAppsScript(
       form.remove();
 
 
-      sending = false;
+      sending =
+        false;
 
 
-      /*
-       * Start a fresh scan automatically.
-       */
+      /**************************************************
+       * AUTOMATICALLY PREPARE NEXT SCAN
+       **************************************************/
 
       setTimeout(
-        resetScanner,
-        1800
+        function () {
+
+          resetScanner();
+
+        },
+        2000
       );
 
 
@@ -1508,47 +1516,7 @@ function sendToAppsScript(
 
 
 /********************************************************
- * DISABLE IN / OUT
- ********************************************************/
-
-function disableButtons() {
-
-  document.getElementById(
-    "inButton"
-  ).disabled =
-    true;
-
-
-  document.getElementById(
-    "outButton"
-  ).disabled =
-    true;
-
-}
-
-
-/********************************************************
- * ENABLE IN / OUT
- ********************************************************/
-
-function enableButtons() {
-
-  document.getElementById(
-    "inButton"
-  ).disabled =
-    false;
-
-
-  document.getElementById(
-    "outButton"
-  ).disabled =
-    false;
-
-}
-
-
-/********************************************************
- * STOP SCANNER
+ * STOP CAMERA
  ********************************************************/
 
 async function stopScanner() {
@@ -1592,27 +1560,14 @@ async function stopScanner() {
   }
 
 
-  scanner = null;
+  scanner =
+    null;
 
 }
 
 
 /********************************************************
- * SHOW SCAN AGAIN
- ********************************************************/
-
-function showScanAgain() {
-
-  document.getElementById(
-    "scanAgain"
-  ).style.display =
-    "block";
-
-}
-
-
-/********************************************************
- * RESET EVERYTHING
+ * RESET SCANNER
  ********************************************************/
 
 async function resetScanner() {
@@ -1674,7 +1629,7 @@ async function resetScanner() {
 
 
   /******************************************************
-   * CLEAR DISPLAY
+   * CLEAR VALUES
    ******************************************************/
 
   document.getElementById(
@@ -1708,7 +1663,7 @@ async function resetScanner() {
 
 
   /******************************************************
-   * CLEAR CAMERA AREA
+   * CLEAR CAMERA
    ******************************************************/
 
   document.getElementById(
@@ -1718,7 +1673,7 @@ async function resetScanner() {
 
 
   /******************************************************
-   * START CAMERA AGAIN
+   * START AGAIN
    ******************************************************/
 
   startScanner();
@@ -1727,43 +1682,59 @@ async function resetScanner() {
 
 
 /********************************************************
- * FORMAT TIME
+ * DISABLE BUTTONS
  ********************************************************/
 
-function formatTime(
-  date
-) {
+function disableButtons() {
 
-  return date.toLocaleTimeString(
-    "en-PH",
-    {
+  document.getElementById(
+    "inButton"
+  ).disabled =
+    true;
 
-      hour:
-        "numeric",
 
-      minute:
-        "2-digit",
-
-      second:
-        "2-digit"
-
-    }
-  );
+  document.getElementById(
+    "outButton"
+  ).disabled =
+    true;
 
 }
 
 
 /********************************************************
- * FORMAT DATE
+ * ENABLE BUTTONS
  ********************************************************/
 
-function formatDate(
+function enableButtons() {
+
+  document.getElementById(
+    "inButton"
+  ).disabled =
+    false;
+
+
+  document.getElementById(
+    "outButton"
+  ).disabled =
+    false;
+
+}
+
+
+/********************************************************
+ * PHILIPPINE DATE
+ ********************************************************/
+
+function formatPhilippineDate(
   date
 ) {
 
-  return date.toLocaleDateString(
+  return new Intl.DateTimeFormat(
     "en-PH",
     {
+
+      timeZone:
+        TIMEZONE,
 
       year:
         "numeric",
@@ -1775,6 +1746,43 @@ function formatDate(
         "2-digit"
 
     }
+  ).format(
+    date
+  );
+
+}
+
+
+/********************************************************
+ * PHILIPPINE TIME
+ ********************************************************/
+
+function formatPhilippineTime(
+  date
+) {
+
+  return new Intl.DateTimeFormat(
+    "en-PH",
+    {
+
+      timeZone:
+        TIMEZONE,
+
+      hour:
+        "numeric",
+
+      minute:
+        "2-digit",
+
+      second:
+        "2-digit",
+
+      hour12:
+        true
+
+    }
+  ).format(
+    date
   );
 
 }
@@ -1841,7 +1849,22 @@ function showStatus(
 
 }
 
+
+/********************************************************
+ * SHOW SCAN AGAIN
+ ********************************************************/
+
+function showScanAgain() {
+
+  document.getElementById(
+    "scanAgain"
+  ).style.display =
+    "block";
+
+}
+
 </script>
+
 
 </body>
 
